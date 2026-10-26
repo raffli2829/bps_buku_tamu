@@ -27,10 +27,38 @@ SELECT COUNT(*) total
 FROM antrian
 WHERE status='Selesai'
 "));
-
 /* ==========================
-   GRAFIK STATUS
+   STATISTIK SKM (SURVEI)
 ========================== */
+
+$skmStats = mysqli_fetch_assoc(mysqli_query($conn, "
+    SELECT 
+        COUNT(*) as total_responden,
+        AVG(rating_pelayanan) as rata_rating
+    FROM survei_kepuasan
+"));
+$totalResponden = (int)($skmStats['total_responden'] ?? 0);
+$avgRating = $totalResponden > 0 ? round((float)$skmStats['rata_rating'], 2) : 0;
+$ikmPersen = $totalResponden > 0 ? round(($avgRating / 5) * 100, 1) : 0;
+
+$mutuText = 'Belum Ada Data';
+$mutuBadge = 'secondary';
+if ($totalResponden > 0) {
+    if ($avgRating >= 4.5) {
+        $mutuText = 'Sangat Baik (A)';
+        $mutuBadge = 'success';
+    } elseif ($avgRating >= 3.5) {
+        $mutuText = 'Baik (B)';
+        $mutuBadge = 'primary';
+    } elseif ($avgRating >= 2.5) {
+        $mutuText = 'Kurang Baik (C)';
+        $mutuBadge = 'warning';
+    } else {
+        $mutuText = 'Tidak Baik (D)';
+        $mutuBadge = 'danger';
+    }
+}
+
 
 $grafik = mysqli_fetch_assoc(mysqli_query($conn,"
 SELECT
@@ -191,7 +219,45 @@ BPS Kabupaten Bangka
 </div>
 
 </div>
+</div>
 
+<!-- WIDGET INDEKS KEPUASAN MASYARAKAT (IKM) -->
+<div class="card mb-4 border-0 shadow-sm" style="background: linear-gradient(135deg, #0d3b66 0%, #1e5288 100%); color: white; border-radius: 12px;">
+    <div class="card-body p-4">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <div class="d-flex align-items-center mb-2 flex-wrap" style="gap: 8px;">
+                    <span class="badge badge-light text-primary px-3 py-1 font-weight-bold"><i class="fas fa-award mr-1"></i> INDEKS KEPUASAN MASYARAKAT (IKM)</span>
+                    <span class="badge badge-<?= $mutuBadge; ?> px-2 py-1"><i class="fas fa-certificate mr-1"></i> Mutu: <?= $mutuText; ?></span>
+                </div>
+                <h4 class="font-weight-bold mb-1">Kualitas Pelayanan PST BPS Kabupaten Bangka</h4>
+                <p class="mb-0 text-white-50" style="font-size: 0.95rem;">
+                    Berdasarkan masukan nyata dari <b><?= number_format($totalResponden); ?></b> responden pengunjung yang telah mengisi survei kepuasan digital.
+                </p>
+            </div>
+            <div class="col-lg-4 text-lg-right mt-3 mt-lg-0">
+                <div class="d-inline-flex" style="gap: 12px;">
+                    <div class="text-center bg-white p-2 px-3 rounded shadow-sm text-dark">
+                        <div style="font-size: 1.6rem; font-weight: 800; color: #f59e0b; line-height: 1.1;">
+                            <i class="fas fa-star text-warning"></i> <?= $totalResponden > 0 ? number_format($avgRating, 1) : '-'; ?> <small style="font-size: 0.75rem; color: #6c757d;">/ 5.0</small>
+                        </div>
+                        <small class="text-muted font-weight-bold d-block mt-1">Skor Rata-Rata</small>
+                    </div>
+                    <div class="text-center bg-white p-2 px-3 rounded shadow-sm text-dark">
+                        <div style="font-size: 1.6rem; font-weight: 800; color: #10b981; line-height: 1.1;">
+                            <?= $totalResponden > 0 ? $ikmPersen . '%' : '-'; ?>
+                        </div>
+                        <small class="text-muted font-weight-bold d-block mt-1">Konversi IKM</small>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <a href="dashboard.php?page=survei" class="btn btn-sm btn-light font-weight-bold text-primary shadow-sm">
+                        <i class="fas fa-chart-line mr-1"></i> Analisis Detail Survei &rarr;
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="row">

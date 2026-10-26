@@ -1,4 +1,5 @@
 <?php
+ob_start();
 session_start();
 
 if (!isset($_SESSION['login'])) {
@@ -74,6 +75,14 @@ include 'includes/sidebar.php';
         include 'pages/laporan/index.php';
         break;
         
+    case 'survei':
+        include 'pages/survei/index.php';
+        break;
+
+    case 'pengumuman':
+        include 'pages/pengumuman/index.php';
+        break;
+
     case 'akun':
         include 'pages/akun/index.php';
         break;

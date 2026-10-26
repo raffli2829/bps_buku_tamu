@@ -124,6 +124,34 @@
 
                 </li>
 
+                <!-- Survei Kepuasan -->
+                <li class="nav-item">
+
+                    <a href="dashboard.php?page=survei"
+                       class="nav-link <?= (isset($_GET['page']) && $_GET['page']=='survei') ? 'active' : ''; ?>">
+
+                        <i class="nav-icon fas fa-star"></i>
+
+                        <p>Survei Kepuasan</p>
+
+                    </a>
+
+                </li>
+
+                <!-- Pengumuman Display TV -->
+                <li class="nav-item">
+
+                    <a href="dashboard.php?page=pengumuman"
+                       class="nav-link <?= (isset($_GET['page']) && $_GET['page']=='pengumuman') ? 'active' : ''; ?>">
+
+                        <i class="nav-icon fas fa-bullhorn"></i>
+
+                        <p>Pengumuman Display</p>
+
+                    </a>
+
+                </li>
+
                 <!-- Laporan -->
                 <li class="nav-item">
 

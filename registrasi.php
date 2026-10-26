@@ -288,6 +288,29 @@ textarea.input-box-field {
     transform: translateY(-2px);
 }
 
+/* Animasi Highlight Auto-fill */
+@keyframes glowAutofill {
+    0% {
+        border-color: #22c55e;
+        box-shadow: 0 0 0 0.25rem rgba(34, 197, 94, 0.35);
+        background-color: #f0fdf4;
+    }
+    70% {
+        border-color: #16a34a;
+        box-shadow: 0 0 0 0.15rem rgba(22, 163, 74, 0.2);
+        background-color: #f0fdf4;
+    }
+    100% {
+        border-color: #ced4da;
+        box-shadow: none;
+        background-color: #ffffff;
+    }
+}
+
+.input-autofilled {
+    animation: glowAutofill 2.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 /* Responsif Mobile */
 @media (max-width: 991px) {
     body {
@@ -404,6 +427,33 @@ textarea.input-box-field {
 
                 <div class="card-body">
 
+                    <!-- Banner Auto-Fill Pengunjung Lama (Quick Check-In) -->
+                    <div id="quickCheckinBox" class="alert border-0 shadow-sm mb-4" style="display: none; border-radius: 14px; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-left: 5px solid #0d6efd !important;">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap" style="gap: 12px;">
+                            <div class="d-flex align-items-center">
+                                <div class="mr-3 bg-white text-primary rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 44px; height: 44px; font-size: 20px; flex-shrink: 0;">
+                                    <i class="fas fa-user-check"></i>
+                                </div>
+                                <div>
+                                    <div class="font-weight-bold" style="color: #1e3a8a; font-size: 14px;">
+                                        👋 Data Kunjungan Sebelumnya Ditemukan!
+                                    </div>
+                                    <div style="font-size: 12.5px; color: #475569;">
+                                        Bpk/Ibu <b id="qcNama">-</b> (<span id="qcInstansi">-</span>)
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center" style="gap: 8px;">
+                                <button type="button" class="btn btn-sm btn-primary font-weight-bold px-3 py-2 shadow-sm" style="border-radius: 8px; font-size: 12.5px;" onclick="terapkanAutoFill()">
+                                    <i class="fas fa-magic mr-1"></i> Gunakan Data Ini (Isi Otomatis)
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary px-2 py-2" style="border-radius: 8px;" onclick="tutupQuickCheckin()" title="Tutup / Jangan gunakan">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                     <form action="proses_registrasi.php" method="POST">
 
                         <div class="row">
@@ -456,13 +506,19 @@ textarea.input-box-field {
 
                             <!-- Nomor HP -->
                             <div class="col-12 col-md-6 mb-3">
-                                <label class="form-label">Nomor WhatsApp / HP <span class="text-danger">*</span></label>
+                                <label class="form-label d-flex justify-content-between align-items-center">
+                                    <span>Nomor WhatsApp / HP <span class="text-danger">*</span></span>
+                                    <span class="badge badge-light text-primary font-weight-normal border" style="font-size: 11px;">
+                                        <i class="fas fa-bolt text-warning mr-1"></i>Auto-Fill Pengunjung Lama
+                                    </span>
+                                </label>
                                 <div class="input-box-group">
                                     <div class="input-box-icon">
                                         <i class="fas fa-phone-alt"></i>
                                     </div>
                                     <input
                                         type="text"
+                                        id="noHpInput"
                                         name="no_hp"
                                         class="input-box-field"
                                         maxlength="15"
@@ -632,6 +688,123 @@ textarea.input-box-field {
 
 <script src="plugins/jquery/jquery.min.js"></script>
 <script src="plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+let quickCheckinData = null;
+let debounceTimer = null;
+
+document.addEventListener("DOMContentLoaded", function () {
+    const noHpInput = document.getElementById("noHpInput");
+    if (!noHpInput) return;
+
+    // Deteksi saat pengguna mengetik nomor HP
+    noHpInput.addEventListener("input", function () {
+        const val = this.value.trim().replace(/[^0-9]/g, "");
+        clearTimeout(debounceTimer);
+
+        if (val.length >= 10) {
+            debounceTimer = setTimeout(() => {
+                periksaNomorHp(val);
+            }, 350);
+        } else {
+            tutupQuickCheckin();
+        }
+    });
+
+    // Deteksi saat keluar dari kolom nomor HP (blur)
+    noHpInput.addEventListener("blur", function () {
+        const val = this.value.trim().replace(/[^0-9]/g, "");
+        if (val.length >= 10 && !quickCheckinData) {
+            periksaNomorHp(val);
+        }
+    });
+});
+
+// Panggil API cek_pengunjung.php
+async function periksaNomorHp(noHp) {
+    try {
+        const res = await fetch("cek_pengunjung.php?no_hp=" + encodeURIComponent(noHp) + "&t=" + Date.now());
+        if (!res.ok) return;
+        const json = await res.json();
+
+        if (json.found && json.data) {
+            quickCheckinData = json.data;
+            document.getElementById("qcNama").innerText = json.data.nama || "Pengunjung";
+            document.getElementById("qcInstansi").innerText = json.data.instansi || "Umum";
+
+            const box = document.getElementById("quickCheckinBox");
+            if (box) {
+                box.style.display = "block";
+                box.scrollIntoView({ behavior: "smooth", block: "nearest" });
+            }
+        } else {
+            tutupQuickCheckin();
+        }
+    } catch (e) {
+        console.error("Gagal memeriksa nomor HP:", e);
+    }
+}
+
+// Terapkan data lama ke seluruh formulir
+function terapkanAutoFill() {
+    if (!quickCheckinData) return;
+
+    const mapping = {
+        "nama": quickCheckinData.nama,
+        "jenis_kelamin": quickCheckinData.jenis_kelamin,
+        "email": quickCheckinData.email,
+        "pekerjaan": quickCheckinData.pekerjaan,
+        "usia": quickCheckinData.usia,
+        "pendidikan_terakhir": quickCheckinData.pendidikan_terakhir,
+        "instansi": quickCheckinData.instansi
+    };
+
+    for (const [name, val] of Object.entries(mapping)) {
+        if (val !== undefined && val !== null && val !== "") {
+            const el = document.querySelector(`[name="${name}"]`);
+            if (el) {
+                el.value = val;
+                const parentGroup = el.closest(".input-box-group");
+                if (parentGroup) {
+                    parentGroup.classList.remove("input-autofilled");
+                    void parentGroup.offsetWidth; // Trigger reflow animasi CSS
+                    parentGroup.classList.add("input-autofilled");
+                }
+            }
+        }
+    }
+
+    // Sembunyikan banner setelah diisi
+    tutupQuickCheckin();
+
+    // Arahkan kursor langsung ke pilihan pelayanan hari ini
+    const elPelayanan = document.querySelector('[name="id_pelayanan"]');
+    if (elPelayanan) {
+        elPelayanan.focus();
+    }
+
+    // Tampilkan notifikasi toast sukses
+    if (typeof Swal !== "undefined") {
+        Swal.fire({
+            icon: "success",
+            title: "Data Kunjungan Berhasil Diisi!",
+            text: "Silakan pilih pelayanan yang dituju & isi keperluan kunjungan hari ini.",
+            timer: 2800,
+            showConfirmButton: false,
+            toast: true,
+            position: "top-end"
+        });
+    }
+}
+
+// Tutup banner jika pengunjung ingin mendaftar dengan data berbeda
+function tutupQuickCheckin() {
+    const box = document.getElementById("quickCheckinBox");
+    if (box) box.style.display = "none";
+    quickCheckinData = null;
+}
+</script>
 
 </body>
 </html>

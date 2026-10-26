@@ -20,6 +20,17 @@ WHERE status='Menunggu'
 ORDER BY id_antrian ASC
 LIMIT 3
 ");
+
+// Ambil pengumuman running text aktif dari database
+$q_pengumuman = mysqli_query($conn, "SELECT isi_teks FROM pengumuman_display WHERE status_aktif = 1 ORDER BY urutan ASC, id_pengumuman ASC");
+$pengumuman_items = [];
+while ($row_p = mysqli_fetch_assoc($q_pengumuman)) {
+    $pengumuman_items[] = htmlspecialchars($row_p['isi_teks']);
+}
+if (empty($pengumuman_items)) {
+    $pengumuman_items[] = "Selamat Datang di BPS Kabupaten Bangka • Silakan menunggu hingga nomor Anda dipanggil • Terima kasih atas kunjungan Anda";
+}
+$running_text_final = implode(" &nbsp;&nbsp;•&nbsp;&nbsp; ", $pengumuman_items);
 ?>
 
 <!DOCTYPE html>
@@ -310,8 +321,8 @@ while($d=mysqli_fetch_assoc($menunggu)){
 
 <div class="running">
 
-<marquee behavior="scroll" direction="left">
-Selamat Datang di BPS Kabupaten Bangka • Silakan menunggu hingga nomor Anda dipanggil • Terima kasih atas kunjungan Anda
+<marquee behavior="scroll" direction="left" scrollamount="6">
+<?= $running_text_final; ?>
 </marquee>
 
 </div>
