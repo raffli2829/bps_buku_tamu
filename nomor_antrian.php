@@ -106,20 +106,6 @@ if (!empty($BASE_PUBLIC_URL)) {
     $live_ticket_url = $protocol . $host . $script_dir . '/nomor_antrian.php?id=' . (int)$data['id_pengunjung'];
 }
 
-// Format nomor WhatsApp pengunjung (konversi 08xxx menjadi 628xxx)
-$clean_hp = preg_replace('/[^0-9]/', '', $data['no_hp'] ?? '');
-if (str_starts_with($clean_hp, '0')) {
-    $clean_hp = '62' . substr($clean_hp, 1);
-}
-
-$wa_ticket_msg = "Halo " . $data['nama'] . ", berikut adalah tiket antrean Anda di *BPS Kabupaten Bangka*:\n\n"
-    . "🎫 *Nomor Antrean:* *" . $data['nomor_antrian'] . "*\n"
-    . "🏢 *Pelayanan:* " . $data['nama_pelayanan'] . "\n"
-    . "🕒 *Waktu Pendaftaran:* " . date('d-m-Y H:i', strtotime($data['waktu_ambil'])) . " WIB\n\n"
-    . "📱 Pantau pergerakan antrean live & isi survei kepuasan di sini:\n" . $live_ticket_url . "\n\n"
-    . "Terima kasih atas kunjungan Anda.";
-
-$wa_share_url = "https://api.whatsapp.com/send?phone=" . urlencode($clean_hp) . "&text=" . urlencode($wa_ticket_msg);
 ?>
 
 <!DOCTYPE html>
@@ -426,18 +412,7 @@ body {
     transform: translateY(-1px);
 }
 
-.btn-whatsapp {
-    background: #25d366;
-    color: #ffffff;
-    box-shadow: 0 4px 12px rgba(37, 211, 102, 0.28);
-}
 
-.btn-whatsapp:hover {
-    background: #20bd5a;
-    color: #ffffff;
-    transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(37, 211, 102, 0.38);
-}
 
 .btn-skm-survey {
     background: linear-gradient(135deg, #fd7e14 0%, #e8590c 100%);
@@ -660,10 +635,7 @@ body {
                 </button>
             </div>
 
-            <!-- Tombol Kirim / Simpan Tiket ke WhatsApp -->
-            <a href="<?= htmlspecialchars($wa_share_url); ?>" target="_blank" class="btn-custom btn-whatsapp" id="btnKirimWa">
-                <i class="fab fa-whatsapp" style="font-size: 17px;"></i> Simpan / Kirim Tiket ke WhatsApp
-            </a>
+
 
             <a href="registrasi.php" class="btn-custom btn-home">
                 <i class="fas fa-user-plus"></i> Registrasi Tamu Baru

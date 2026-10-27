@@ -82,7 +82,7 @@ $query_list = mysqli_query($conn, "
                 <i class="fas fa-star"></i>
             </div>
             <span class="small-box-footer">
-                Mutu: <span class="badge <?= $mutu_badge; ?> px-2 py-1"><?= $mutu_huruf; ?> - <?= $mutu_teks; ?></span>
+                <span class="badge <?= $mutu_badge; ?> px-2 py-1"><?= $mutu_huruf; ?> - <?= $mutu_teks; ?></span>
             </span>
         </div>
     </div>
@@ -188,9 +188,9 @@ $query_list = mysqli_query($conn, "
             <i class="fas fa-list-alt mr-1 text-primary"></i> Data Ulasan &amp; Kritik/Saran Pengunjung
         </h3>
         <div class="card-tools">
-            <button onclick="window.print()" class="btn btn-outline-secondary btn-sm mr-2">
+            <a href="pages/survei/cetak.php?tanggal1=<?= urlencode($tanggal1); ?>&tanggal2=<?= urlencode($tanggal2); ?>" target="_blank" class="btn btn-outline-secondary btn-sm mr-2">
                 <i class="fas fa-print mr-1"></i> Cetak Rekap
-            </button>
+            </a>
         </div>
     </div>
 

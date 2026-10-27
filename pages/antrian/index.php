@@ -106,23 +106,12 @@ ORDER BY a.id_antrian DESC
 
                     <?php } ?>
 
-                  <?php if($d['status']=="Dipanggil"){ 
-                      $clean_wa = preg_replace('/[^0-9]/', '', $d['no_hp'] ?? '');
-                      if (str_starts_with($clean_wa, '0')) {
-                          $clean_wa = '62' . substr($clean_wa, 1);
-                      }
-                      $pesan_panggilan = "Yth. Bpk/Ibu *" . $d['nama'] . "*,\n\nNomor antrean Anda *" . $d['nomor_antrian'] . "* untuk layanan *" . $d['nama_pelayanan'] . "* saat ini *SEDANG DIPANGGIL* di Loket Pelayanan BPS Kabupaten Bangka.\n\nSilakan segera menuju ke loket pelayanan. Terima kasih.";
-                      $wa_link = "https://api.whatsapp.com/send?phone=" . urlencode($clean_wa) . "&text=" . urlencode($pesan_panggilan);
-                  ?>
+                  <?php if($d['status']=="Dipanggil"){ ?>
 
 <a href="pages/antrian/panggil_ulang.php?id=<?= $d['id_antrian']; ?>"
 class="btn btn-warning btn-sm" title="Panggil ulang suara di Display TV">
 <i class="fas fa-volume-up"></i>
 Panggil Ulang
-</a>
-
-<a href="<?= $wa_link; ?>" target="_blank" class="btn btn-success btn-sm" title="Kirim Notifikasi Panggilan WhatsApp ke Tamu">
-<i class="fab fa-whatsapp"></i> Notif WA
 </a>
 
 <a href="pages/antrian/selesai.php?id=<?= $d['id_antrian']; ?>"

@@ -250,11 +250,6 @@ BPS Kabupaten Bangka
                         <small class="text-muted font-weight-bold d-block mt-1">Konversi IKM</small>
                     </div>
                 </div>
-                <div class="mt-2">
-                    <a href="dashboard.php?page=survei" class="btn btn-sm btn-light font-weight-bold text-primary shadow-sm">
-                        <i class="fas fa-chart-line mr-1"></i> Analisis Detail Survei &rarr;
-                    </a>
-                </div>
             </div>
         </div>
     </div>

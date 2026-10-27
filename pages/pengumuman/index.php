@@ -219,30 +219,6 @@ $preview_text = !empty($preview_list) ? implode(" &nbsp;&bull;&nbsp; ", $preview
                                 style="border-radius: 8px;"></textarea>
                             <small class="text-muted">Teks ini akan berjalan di bagian bawah layar Display TV antrean.</small>
                         </div>
-                        <div class="form-group">
-                            <label class="font-weight-bold d-flex justify-content-between align-items-center">
-                                <span>Urutan Tampil <span class="text-danger">*</span></span>
-                                <span class="badge badge-light border text-primary px-2 py-1" style="font-size: 11px;">
-                                    Tersedia: #<?= $next_urutan; ?>
-                                </span>
-                            </label>
-                            <input 
-                                type="number" 
-                                name="urutan" 
-                                id="tambah_urutan" 
-                                class="form-control" 
-                                value="<?= $next_urutan; ?>" 
-                                min="1" 
-                                max="999" 
-                                required 
-                                style="border-radius: 8px;">
-                            <div id="pesanDuplikatTambah" class="text-danger font-weight-bold mt-1" style="display: none; font-size: 12px;">
-                                <i class="fas fa-exclamation-triangle mr-1"></i> Nomor urutan ini sudah digunakan! Tidak boleh sama.
-                            </div>
-                            <small class="text-muted d-block mt-1">
-                                <i class="fas fa-info-circle mr-1 text-primary"></i> <strong>Nomor urutan tidak boleh sama</strong>. Angka lebih kecil akan tayang lebih awal.
-                            </small>
-                        </div>
                         <div class="form-group mb-0">
                             <div class="custom-control custom-switch">
                                 <input type="checkbox" class="custom-control-input" id="switchStatus" name="status_aktif" value="1" checked>

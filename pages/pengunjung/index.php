@@ -102,22 +102,17 @@ Data Pengunjung
 
 </h3>
 
+<div class="card-tools">
+
+<a href="dashboard.php?page=pengunjung_tambah" class="btn btn-light btn-sm">
+
+<i class="fas fa-plus"></i>
+
+Tambah Pengunjung
+
+</a>
+
 </div>
-
-<div class="row mb-3">
-
-    <div class="col-md-12 text-right">
-
-        <a href="dashboard.php?page=pengunjung_tambah"
-           class="btn btn-primary">
-
-            <i class="fas fa-plus"></i>
-
-            Tambah Pengunjung
-
-        </a>
-
-    </div>
 
 </div>
 
