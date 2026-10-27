@@ -153,19 +153,19 @@ while($d=mysqli_fetch_assoc($query)){
 
 <td><?= $no++; ?></td>
 
-<td><?= $d['nama']; ?></td>
+<td><?= htmlspecialchars($d['nama'] ?? ''); ?></td>
 
-<td><?= $d['jenis_kelamin']; ?></td>
+<td><?= htmlspecialchars($d['jenis_kelamin'] ?? ''); ?></td>
 
-<td><?= $d['no_hp']; ?></td>
+<td><?= htmlspecialchars($d['no_hp'] ?? ''); ?></td>
 
-<td><?= $d['instansi']; ?></td>
+<td><?= htmlspecialchars($d['instansi'] ?? ''); ?></td>
 
-<td><?= $d['nama_pelayanan']; ?></td>
+<td><?= htmlspecialchars($d['nama_pelayanan'] ?? ''); ?></td>
 
 <td>
 
-<b><?= $d['nomor_antrian']; ?></b>
+<b><?= htmlspecialchars($d['nomor_antrian'] ?? '-'); ?></b>
 
 </td>
 

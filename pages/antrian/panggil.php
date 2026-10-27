@@ -1,20 +1,20 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+session_start();
+if (!isset($_SESSION['login'])) {
+    header("Location: ../../login.php");
+    exit;
+}
 
 include '../../config/koneksi.php';
 
-$id = $_GET['id'];
+$id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
-$sql = "UPDATE antrian
-SET
-status='Dipanggil',
-waktu_panggil=NOW()
-WHERE id_antrian='$id'";
-
-if(mysqli_query($conn,$sql)){
-    header("Location: ../../dashboard.php?page=antrian");
-    exit;
-}else{
-    echo mysqli_error($conn);
+if ($id > 0) {
+    $stmt = $conn->prepare("UPDATE antrian SET status = 'Dipanggil', waktu_panggil = NOW() WHERE id_antrian = ?");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $stmt->close();
 }
+
+header("Location: ../../dashboard.php?page=antrian");
+exit;

@@ -451,6 +451,11 @@ function filePelayanan(nama){
             return "pengaduan.mp3";
 
         default:
+            let lower = (nama || "").toLowerCase();
+            if (lower.includes("ppid")) return "ppid.mp3";
+            if (lower.includes("pst") || lower.includes("statistik")) return "pst.mp3";
+            if (lower.includes("aduan") || lower.includes("pengaduan")) return "pengaduan.mp3";
+            if (lower.includes("kunjung")) return "kunjungan.mp3";
             return "";
 
     }

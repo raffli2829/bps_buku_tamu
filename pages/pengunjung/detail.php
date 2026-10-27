@@ -1,9 +1,9 @@
 <?php
 include 'config/koneksi.php';
 
-$id = $_GET['id'];
+$id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
-$query = mysqli_query($conn,"
+$stmt = $conn->prepare("
 SELECT
 p.*,
 pl.nama_pelayanan,
@@ -12,19 +12,17 @@ a.status,
 a.waktu_ambil,
 a.waktu_panggil,
 a.waktu_selesai
-
 FROM pengunjung p
-
-LEFT JOIN pelayanan pl
-ON p.id_pelayanan = pl.id_pelayanan
-
-LEFT JOIN antrian a
-ON p.id_pengunjung = a.id_pengunjung
-
-WHERE p.id_pengunjung='$id'
+LEFT JOIN pelayanan pl ON p.id_pelayanan = pl.id_pelayanan
+LEFT JOIN antrian a ON p.id_pengunjung = a.id_pengunjung
+WHERE p.id_pengunjung = ?
+LIMIT 1
 ");
-
-$data = mysqli_fetch_assoc($query);
+$stmt->bind_param("i", $id);
+$stmt->execute();
+$res = $stmt->get_result();
+$data = $res->fetch_assoc();
+$stmt->close();
 
 if(!$data){
     echo "<div class='alert alert-danger'>Data tidak ditemukan.</div>";
@@ -52,64 +50,64 @@ if(!$data){
 
             <tr>
                 <th width="280">Nama Lengkap</th>
-                <td><?= $data['nama']; ?></td>
+                <td><?= htmlspecialchars($data['nama'] ?? ''); ?></td>
             </tr>
 
             <tr>
                 <th>Jenis Kelamin</th>
-                <td><?= $data['jenis_kelamin']; ?></td>
+                <td><?= htmlspecialchars($data['jenis_kelamin'] ?? ''); ?></td>
             </tr>
 
             <tr>
                 <th>Nomor HP</th>
-                <td><?= $data['no_hp']; ?></td>
+                <td><?= htmlspecialchars($data['no_hp'] ?? ''); ?></td>
             </tr>
 
             <tr>
                 <th>Email Aktif</th>
-                <td><?= $data['email']; ?></td>
+                <td><?= htmlspecialchars($data['email'] ?? ''); ?></td>
             </tr>
 
             <tr>
                 <th>Pekerjaan</th>
-                <td><?= $data['pekerjaan']; ?></td>
+                <td><?= htmlspecialchars($data['pekerjaan'] ?? ''); ?></td>
             </tr>
 
             <tr>
                 <th>Usia</th>
-                <td><?= $data['usia']; ?> Tahun</td>
+                <td><?= (int)($data['usia'] ?? 0); ?> Tahun</td>
             </tr>
 
             <tr>
                 <th>Pendidikan Terakhir</th>
-                <td><?= $data['pendidikan_terakhir']; ?></td>
+                <td><?= htmlspecialchars($data['pendidikan_terakhir'] ?? ''); ?></td>
             </tr>
 
             <tr>
                 <th>Asal Instansi</th>
-                <td><?= $data['instansi']; ?></td>
+                <td><?= htmlspecialchars($data['instansi'] ?? ''); ?></td>
             </tr>
 
             <tr>
                 <th>Nomor Parkir</th>
-                <td><?= $data['nomor_parkir']; ?></td>
+                <td><?= htmlspecialchars($data['nomor_parkir'] ?? '-'); ?></td>
             </tr>
 
             <tr>
                 <th>Pelayanan</th>
-                <td><?= $data['nama_pelayanan']; ?></td>
+                <td><?= htmlspecialchars($data['nama_pelayanan'] ?? ''); ?></td>
             </tr>
 
             <tr>
                 <th>Tujuan</th>
-                <td><?= nl2br(htmlspecialchars($data['tujuan'])); ?></td>
+                <td><?= nl2br(htmlspecialchars($data['tujuan'] ?? '')); ?></td>
             </tr>
 
             <tr>
                 <th>Nomor Antrian</th>
                 <td>
                     <span class="badge badge-primary" style="font-size:16px;">
-                        <?= $data['nomor_antrian']; ?>
+                        <?= htmlspecialchars($data['nomor_antrian'] ?? '-'); ?>
                     </span>
                 </td>
             </tr>

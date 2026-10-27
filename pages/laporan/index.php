@@ -72,7 +72,9 @@ $where="";
 
 if($tanggal1!="" && $tanggal2!=""){
 
-$where="WHERE p.tanggal BETWEEN '$tanggal1' AND '$tanggal2'";
+$t1 = mysqli_real_escape_string($conn, $tanggal1);
+$t2 = mysqli_real_escape_string($conn, $tanggal2);
+$where="WHERE p.tanggal BETWEEN '$t1' AND '$t2'";
 
 }
 

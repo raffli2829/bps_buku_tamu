@@ -1,4 +1,10 @@
 <?php
+session_start();
+if (!isset($_SESSION['login'])) {
+    header("Location: ../../login.php");
+    exit;
+}
+
 include '../../config/koneksi.php';
 
 $tanggal1 = isset($_GET['tanggal1']) ? $_GET['tanggal1'] : '';
@@ -7,7 +13,9 @@ $tanggal2 = isset($_GET['tanggal2']) ? $_GET['tanggal2'] : '';
 $where = "";
 
 if($tanggal1 != "" && $tanggal2 != ""){
-    $where = "WHERE p.tanggal BETWEEN '$tanggal1' AND '$tanggal2'";
+    $t1 = mysqli_real_escape_string($conn, $tanggal1);
+    $t2 = mysqli_real_escape_string($conn, $tanggal2);
+    $where = "WHERE p.tanggal BETWEEN '$t1' AND '$t2'";
 }
 
 $query = mysqli_query($conn,"

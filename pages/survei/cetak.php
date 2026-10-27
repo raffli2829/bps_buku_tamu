@@ -1,4 +1,10 @@
 <?php
+session_start();
+if (!isset($_SESSION['login'])) {
+    header("Location: ../../login.php");
+    exit;
+}
+
 include '../../config/koneksi.php';
 
 $tanggal1 = isset($_GET['tanggal1']) ? $_GET['tanggal1'] : '';

@@ -1,19 +1,21 @@
 <?php
+session_start();
+if (!isset($_SESSION['login'])) {
+    header("Location: ../../login.php");
+    exit;
+}
 
 include "../../config/koneksi.php";
 
-$id = $_GET['id'];
+$id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
-// Tidak mengubah status,
-// hanya memperbarui waktu panggil
-mysqli_query($conn,"
-UPDATE antrian
-SET waktu_panggil = NOW()
-WHERE id_antrian='$id'
-");
+if ($id > 0) {
+    // Tidak mengubah status, hanya memperbarui waktu panggil agar trigger suara di Display TV
+    $stmt = $conn->prepare("UPDATE antrian SET waktu_panggil = NOW() WHERE id_antrian = ?");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $stmt->close();
+}
 
 header("Location: ../../dashboard.php?page=antrian");
-
 exit;
-
-?>

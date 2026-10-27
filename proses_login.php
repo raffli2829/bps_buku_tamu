@@ -21,8 +21,10 @@ if(mysqli_num_rows($query) > 0){
     // Cek password yang di-hash
     if(password_verify($password, $data['password'])){
 
-        $_SESSION['login'] = true;
-        $_SESSION['nama']  = $data['nama'];
+        $_SESSION['login']   = true;
+        $_SESSION['id_user'] = (int)$data['id_user'];
+        $_SESSION['nama']    = $data['nama'];
+        $_SESSION['username']= $data['username'];
 
         header("Location: dashboard.php");
         exit;

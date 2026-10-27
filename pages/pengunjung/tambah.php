@@ -82,17 +82,19 @@ if(isset($_POST['simpan'])){
     $kode = $dataPelayanan['kode'];
 
     $cek = mysqli_query($conn,"
-    SELECT nomor_antrian
-    FROM antrian
-    WHERE id_pelayanan='$id_pelayanan'
-    ORDER BY id_antrian DESC
+    SELECT a.nomor_antrian
+    FROM antrian a
+    INNER JOIN pengunjung p ON a.id_pengunjung = p.id_pengunjung
+    WHERE a.id_pelayanan = '$id_pelayanan'
+      AND p.tanggal = '$tanggal'
+    ORDER BY a.id_antrian DESC
     LIMIT 1
     ");
 
     if(mysqli_num_rows($cek)>0){
 
         $last = mysqli_fetch_assoc($cek);
-        $angka = substr($last['nomor_antrian'],1);
+        $angka = (int) substr($last['nomor_antrian'],1);
         $angka++;
 
     }else{

@@ -4,6 +4,30 @@ include 'config/koneksi.php';
 $query = mysqli_query($conn,"SELECT * FROM pelayanan ORDER BY kode ASC");
 ?>
 
+<?php if(isset($_GET['hapus']) && $_GET['hapus'] == 'berhasil'){ ?>
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+    Swal.fire({
+        icon: 'success',
+        title: 'Berhasil',
+        text: 'Data pelayanan berhasil dihapus',
+        timer: 1800,
+        showConfirmButton: false
+    });
+});
+</script>
+<?php } elseif(isset($_GET['hapus']) && $_GET['hapus'] == 'gagal_terkait'){ ?>
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+    Swal.fire({
+        icon: 'error',
+        title: 'Tidak Dapat Dihapus',
+        text: 'Pelayanan ini tidak dapat dihapus karena masih terkait dengan data pengunjung atau antrian yang ada.'
+    });
+});
+</script>
+<?php } ?>
+
 <div class="card">
 
 <div class="card-header bg-primary">

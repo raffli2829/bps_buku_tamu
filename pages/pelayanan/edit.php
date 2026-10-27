@@ -1,28 +1,41 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+session_start();
+if (!isset($_SESSION['login'])) {
+    header("Location: ../../login.php");
+    exit;
+}
 
 include '../../config/koneksi.php';
 
-$id = $_GET['id'];
+$id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+if ($id <= 0) {
+    header("Location: ../../dashboard.php?page=pelayanan");
+    exit;
+}
 
-$data = mysqli_fetch_assoc(mysqli_query($conn,"
-SELECT * FROM pelayanan
-WHERE id_pelayanan='$id'
-"));
+$stmt = $conn->prepare("SELECT * FROM pelayanan WHERE id_pelayanan = ? LIMIT 1");
+$stmt->bind_param("i", $id);
+$stmt->execute();
+$res = $stmt->get_result();
+$data = $res->fetch_assoc();
+$stmt->close();
+
+if (!$data) {
+    header("Location: ../../dashboard.php?page=pelayanan");
+    exit;
+}
 
 if(isset($_POST['update'])){
 
-    $kode = mysqli_real_escape_string($conn,$_POST['kode']);
-    $nama = mysqli_real_escape_string($conn,$_POST['nama_pelayanan']);
+    $kode = strtoupper(trim($_POST['kode'] ?? ''));
+    $nama = trim($_POST['nama_pelayanan'] ?? '');
 
-    mysqli_query($conn,"
-    UPDATE pelayanan
-    SET
-        kode='$kode',
-        nama_pelayanan='$nama'
-    WHERE id_pelayanan='$id'
-    ");
+    if (!empty($kode) && !empty($nama)) {
+        $stmt_up = $conn->prepare("UPDATE pelayanan SET kode = ?, nama_pelayanan = ? WHERE id_pelayanan = ?");
+        $stmt_up->bind_param("ssi", $kode, $nama, $id);
+        $stmt_up->execute();
+        $stmt_up->close();
+    }
 
     header("Location: ../../dashboard.php?page=pelayanan");
     exit;
@@ -72,7 +85,7 @@ type="text"
 name="kode"
 class="form-control"
 maxlength="1"
-value="<?= $data['kode']; ?>"
+value="<?= htmlspecialchars($data['kode']); ?>"
 required>
 
 </div>
@@ -85,7 +98,7 @@ required>
 type="text"
 name="nama_pelayanan"
 class="form-control"
-value="<?= $data['nama_pelayanan']; ?>"
+value="<?= htmlspecialchars($data['nama_pelayanan']); ?>"
 required>
 
 </div>

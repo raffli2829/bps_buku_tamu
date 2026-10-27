@@ -1,24 +1,23 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+session_start();
+if (!isset($_SESSION['login'])) {
+    header("Location: ../../login.php");
+    exit;
+}
 
 include '../../config/koneksi.php';
 
 if(isset($_POST['simpan'])){
 
-    $kode = mysqli_real_escape_string($conn,$_POST['kode']);
-    $nama = mysqli_real_escape_string($conn,$_POST['nama_pelayanan']);
+    $kode = strtoupper(trim($_POST['kode'] ?? ''));
+    $nama = trim($_POST['nama_pelayanan'] ?? '');
 
-    mysqli_query($conn,"
-    INSERT INTO pelayanan(
-        kode,
-        nama_pelayanan
-    )
-    VALUES(
-        '$kode',
-        '$nama'
-    )
-    ");
+    if (!empty($kode) && !empty($nama)) {
+        $stmt = $conn->prepare("INSERT INTO pelayanan (kode, nama_pelayanan) VALUES (?, ?)");
+        $stmt->bind_param("ss", $kode, $nama);
+        $stmt->execute();
+        $stmt->close();
+    }
 
     header("Location: ../../dashboard.php?page=pelayanan");
     exit;

@@ -64,12 +64,12 @@ ORDER BY a.id_antrian DESC
                 <td><?= $no++; ?></td>
 
                 <td>
-                    <b><?= $d['nomor_antrian']; ?></b>
+                    <b><?= htmlspecialchars($d['nomor_antrian'] ?? '-'); ?></b>
                 </td>
 
-                <td><?= $d['nama']; ?></td>
+                <td><?= htmlspecialchars($d['nama'] ?? ''); ?></td>
 
-                <td><?= $d['nama_pelayanan']; ?></td>
+                <td><?= htmlspecialchars($d['nama_pelayanan'] ?? ''); ?></td>
 
                 <td>
 

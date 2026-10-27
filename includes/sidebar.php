@@ -71,7 +71,7 @@
                 <li class="nav-item">
 
                     <a href="dashboard.php?page=pengunjung"
-                       class="nav-link <?= (isset($_GET['page']) && $_GET['page']=='pengunjung') ? 'active' : ''; ?>">
+                       class="nav-link <?= (isset($_GET['page']) && in_array($_GET['page'], ['pengunjung', 'pengunjung_tambah', 'pengunjung_detail', 'pengunjung_edit'])) ? 'active' : ''; ?>">
 
                         <i class="nav-icon fas fa-users"></i>
 
@@ -167,7 +167,7 @@
                 </li>
                 <li class="nav-item">
 
-    <a href="dashboard.php?page=akun" class="nav-link">
+    <a href="dashboard.php?page=akun" class="nav-link <?= (isset($_GET['page']) && $_GET['page']=='akun') ? 'active' : ''; ?>">
 
         <i class="nav-icon fas fa-user-cog"></i>
 

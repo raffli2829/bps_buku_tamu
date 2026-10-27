@@ -58,30 +58,39 @@ if(isset($_GET['error']) && $_GET['error']=="konfirmasi"){
     </script>";
 }
 
-// Ambil data admin
-$admin = mysqli_fetch_assoc(mysqli_query($conn,"SELECT * FROM users LIMIT 1"));
+// Ambil data admin yang sedang login
+$user_id = isset($_SESSION['id_user']) ? (int)$_SESSION['id_user'] : 0;
+$admin = null;
+if ($user_id > 0) {
+    $stmt_u = $conn->prepare("SELECT * FROM users WHERE id_user = ? LIMIT 1");
+    $stmt_u->bind_param("i", $user_id);
+    $stmt_u->execute();
+    $admin = $stmt_u->get_result()->fetch_assoc();
+    $stmt_u->close();
+}
+if (!$admin) {
+    $admin = mysqli_fetch_assoc(mysqli_query($conn,"SELECT * FROM users LIMIT 1"));
+}
 
-if(isset($_POST['simpan'])){
+if(isset($_POST['simpan']) && $admin){
 
-    $nama = mysqli_real_escape_string($conn,$_POST['nama']);
-    $username = mysqli_real_escape_string($conn,$_POST['username']);
+    $nama = trim($_POST['nama'] ?? '');
+    $username = trim($_POST['username'] ?? '');
 
-    $password_lama = $_POST['password_lama'];
-    $password_baru = $_POST['password_baru'];
-    $konfirmasi = $_POST['konfirmasi'];
+    $password_lama = $_POST['password_lama'] ?? '';
+    $password_baru = $_POST['password_baru'] ?? '';
+    $konfirmasi = $_POST['konfirmasi'] ?? '';
 
     // Jika hanya ganti nama/username
     if(empty($password_baru)){
 
-        mysqli_query($conn,"
-        UPDATE users
-        SET
-            nama='$nama',
-            username='$username'
-        WHERE id_user='".$admin['id_user']."'
-        ");
+        $stmt_up = $conn->prepare("UPDATE users SET nama = ?, username = ? WHERE id_user = ?");
+        $stmt_up->bind_param("ssi", $nama, $username, $admin['id_user']);
+        $stmt_up->execute();
+        $stmt_up->close();
 
-        $_SESSION['nama']=$nama;
+        $_SESSION['nama'] = $nama;
+        $_SESSION['username'] = $username;
 
         echo "<script>window.location='dashboard.php?page=akun&update=berhasil';</script>";
         exit;
@@ -102,16 +111,13 @@ if(isset($_POST['simpan'])){
     // Update password
     $passwordHash = password_hash($password_baru,PASSWORD_DEFAULT);
 
-    mysqli_query($conn,"
-    UPDATE users
-    SET
-        nama='$nama',
-        username='$username',
-        password='$passwordHash'
-    WHERE id_user='".$admin['id_user']."'
-    ");
+    $stmt_pw = $conn->prepare("UPDATE users SET nama = ?, username = ?, password = ? WHERE id_user = ?");
+    $stmt_pw->bind_param("sssi", $nama, $username, $passwordHash, $admin['id_user']);
+    $stmt_pw->execute();
+    $stmt_pw->close();
 
-    $_SESSION['nama']=$nama;
+    $_SESSION['nama'] = $nama;
+    $_SESSION['username'] = $username;
 
     echo "<script>window.location='dashboard.php?page=akun&password=berhasil';</script>";
     exit;
