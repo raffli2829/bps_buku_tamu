@@ -2,6 +2,21 @@
 include 'config/koneksi.php';
 
 $pelayanan = mysqli_query($conn, "SELECT * FROM pelayanan ORDER BY kode ASC");
+
+$selected_pelayanan_id = isset($_GET['id_pelayanan']) ? (int)$_GET['id_pelayanan'] : 0;
+$selected_pelayanan_data = null;
+if ($selected_pelayanan_id > 0) {
+    $q_sel = mysqli_query($conn, "SELECT * FROM pelayanan WHERE id_pelayanan = $selected_pelayanan_id LIMIT 1");
+    if ($q_sel && mysqli_num_rows($q_sel) > 0) {
+        $selected_pelayanan_data = mysqli_fetch_assoc($q_sel);
+    }
+}
+
+// Jika belum memilih layanan dari halaman utama, arahkan kembali ke index.php
+if (!$selected_pelayanan_data) {
+    header("Location: index.php");
+    exit;
+}
 ?>
 
 <!DOCTYPE html>
@@ -288,6 +303,95 @@ textarea.input-box-field {
     transform: translateY(-2px);
 }
 
+/* Kartu Informasi Layanan Terpilih di Registrasi */
+.selected-service-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border: 1.5px solid #bae6fd;
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.08);
+    gap: 14px;
+}
+
+.selected-service-content {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex: 1;
+    min-width: 0;
+}
+
+.selected-service-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: #0284c7;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 19px;
+    flex-shrink: 0;
+    box-shadow: 0 4px 10px rgba(2, 132, 199, 0.25);
+}
+
+.selected-service-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.selected-service-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #0369a1;
+    margin-bottom: 2px;
+}
+
+.selected-service-title {
+    font-size: 17px;
+    font-weight: 800;
+    color: #0c4a6e;
+    margin: 0;
+    line-height: 1.3;
+}
+
+.btn-ganti-service {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #ffffff !important;
+    color: #0284c7 !important;
+    border: 1.5px solid #0284c7 !important;
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none !important;
+    box-shadow: 0 2px 6px rgba(2, 132, 199, 0.12);
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.btn-ganti-service:hover {
+    background: #0284c7 !important;
+    color: #ffffff !important;
+    border-color: #0284c7 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+    text-decoration: none !important;
+}
+
+.btn-ganti-service:active {
+    transform: scale(0.98);
+}
+
 
 
 /* Responsif Mobile */
@@ -345,6 +449,60 @@ textarea.input-box-field {
     }
 }
 
+@media (max-width: 767.98px) {
+    .card-regis .card-body {
+        padding: 18px 14px;
+    }
+
+    /* Penataan Kartu Layanan Terpilih di HP: Vertikal & Proporsional */
+    .selected-service-box {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 14px 16px;
+        gap: 12px;
+    }
+
+    .selected-service-content {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+    }
+
+    .selected-service-icon {
+        width: 42px;
+        height: 42px;
+        font-size: 18px;
+        border-radius: 10px;
+        flex-shrink: 0;
+    }
+
+    .selected-service-text {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .selected-service-label {
+        font-size: 11px;
+        margin-bottom: 2px;
+    }
+
+    .selected-service-title {
+        font-size: 15.5px;
+        line-height: 1.35;
+        overflow-wrap: break-word;
+        word-break: normal;
+    }
+
+    .btn-ganti-service {
+        width: 100%;
+        justify-content: center;
+        padding: 9px 14px;
+        font-size: 13px;
+        border-radius: 10px;
+    }
+}
+
 </style>
 
 </head>
@@ -353,9 +511,9 @@ textarea.input-box-field {
 
 <div class="main-wrapper">
 
-    <!-- Tombol Kembali yang aman dan responsif -->
-    <a href="login.php" class="btn-back-custom">
-        <i class="fas fa-arrow-left mr-2"></i> Kembali ke Login
+    <!-- Tombol Kembali ke Halaman Pilihan Layanan -->
+    <a href="index.php" class="btn-back-custom" title="Kembali ke Pilihan Layanan">
+        <i class="fas fa-arrow-left mr-2"></i> Kembali ke Pilihan Layanan
     </a>
 
     <div class="row align-items-start">
@@ -406,7 +564,25 @@ textarea.input-box-field {
 
                 <div class="card-body">
 
+                    <?php if ($selected_pelayanan_data) { ?>
+                    <!-- Kartu Informasi Layanan yang Dipilih dari Halaman Utama -->
+                    <div class="selected-service-box mb-4">
+                        <div class="selected-service-content">
+                            <div class="selected-service-text">
+                                <span class="selected-service-label">
+                                    <i class="fas fa-check-circle mr-1"></i> Pelayanan yang Anda Pilih
+                                </span>
+                                <h4 class="selected-service-title">
+                                    <?= htmlspecialchars($selected_pelayanan_data['nama_pelayanan']); ?>
+                                </h4>
+                            </div>
+                        </div>
+                    </div>
+                    <?php } ?>
+
                     <form action="proses_registrasi.php" method="POST">
+                        <!-- ID Pelayanan tersimpan otomatis dari halaman utama -->
+                        <input type="hidden" name="id_pelayanan" value="<?= (int)$selected_pelayanan_id; ?>">
 
                         <div class="row">
 
@@ -577,23 +753,7 @@ textarea.input-box-field {
                                 </div>
                             </div>
 
-                            <!-- Pelayanan -->
-                            <div class="col-12 mb-3">
-                                <label class="form-label">Pilihan Pelayanan <span class="text-danger">*</span></label>
-                                <div class="input-box-group">
-                                    <div class="input-box-icon">
-                                        <i class="fas fa-concierge-bell"></i>
-                                    </div>
-                                    <select name="id_pelayanan" class="input-box-field" required>
-                                        <option value="">-- Pilih Pelayanan yang Dituju --</option>
-                                        <?php while($p = mysqli_fetch_assoc($pelayanan)){ ?>
-                                        <option value="<?= $p['id_pelayanan']; ?>">
-                                            <?= htmlspecialchars($p['kode']); ?> - <?= htmlspecialchars($p['nama_pelayanan']); ?>
-                                        </option>
-                                        <?php } ?>
-                                    </select>
-                                </div>
-                            </div>
+
 
                             <!-- Tujuan -->
                             <div class="col-12 mb-4">

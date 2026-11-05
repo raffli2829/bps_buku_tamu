@@ -30,32 +30,49 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && isset($_POST['aksi']) && $_
     $urutan = (int)($_POST['urutan'] ?? $next_urutan);
     $status_aktif = isset($_POST['status_aktif']) ? 1 : 0;
 
-    if (!empty($isi_teks) && $urutan > 0) {
-        // Cek validasi: nomor urutan tidak boleh ada yang sama
-        $cek_stmt = $conn->prepare("SELECT id_pengumuman FROM pengumuman_display WHERE urutan = ? LIMIT 1");
-        $cek_stmt->bind_param("i", $urutan);
-        $cek_stmt->execute();
-        $cek_result = $cek_stmt->get_result();
+    if ($urutan < 1) {
+        $urutan = 1;
+    }
 
-        if ($cek_result && $cek_result->num_rows > 0) {
-            $pesan = "Gagal! Nomor urutan #{$urutan} sudah digunakan oleh pengumuman lain. Setiap pengumuman wajib memiliki nomor urutan yang berbeda (Rekomendasi urutan berikutnya: #{$next_urutan}).";
-            $pesan_tipe = 'danger';
-            $cek_stmt->close();
-        } else {
-            $cek_stmt->close();
+    if (!empty($isi_teks)) {
+        // Capping agar tidak ada gap urutan kosong yang terlalu jauh
+        if ($urutan > $next_urutan) {
+            $urutan = $next_urutan;
+        }
+
+        $conn->begin_transaction();
+        try {
+            // Cek apakah nomor urutan target sudah dipakai oleh pengumuman lain
+            $cek = $conn->prepare("SELECT COUNT(*) AS total FROM pengumuman_display WHERE urutan = ?");
+            $cek->bind_param("i", $urutan);
+            $cek->execute();
+            $res_cek = $cek->get_result()->fetch_assoc();
+            $cek->close();
+
+            if (($res_cek['total'] ?? 0) > 0) {
+                // Geser mundur (+1) semua pengumuman yang urutannya >= $urutan
+                // ORDER BY urutan DESC wajib agar tidak bentrok dengan UNIQUE KEY di database
+                $shift_stmt = $conn->prepare("UPDATE pengumuman_display SET urutan = urutan + 1 WHERE urutan >= ? ORDER BY urutan DESC");
+                $shift_stmt->bind_param("i", $urutan);
+                $shift_stmt->execute();
+                $shift_stmt->close();
+            }
+
+            // Simpan pengumuman baru pada slot urutan yang ditentukan
             $stmt = $conn->prepare("INSERT INTO pengumuman_display (isi_teks, status_aktif, urutan, created_at) VALUES (?, ?, ?, NOW())");
             $stmt->bind_param("sii", $isi_teks, $status_aktif, $urutan);
-            if ($stmt->execute()) {
-                $stmt->close();
-                redirect_ke("dashboard.php?page=pengumuman&pesan=added");
-            } else {
-                $pesan = 'Gagal menambahkan pengumuman: ' . $conn->error;
-                $pesan_tipe = 'danger';
-                $stmt->close();
-            }
+            $stmt->execute();
+            $stmt->close();
+
+            $conn->commit();
+            redirect_ke("dashboard.php?page=pengumuman&pesan=added");
+        } catch (Exception $e) {
+            $conn->rollback();
+            $pesan = 'Gagal menambahkan pengumuman: ' . $e->getMessage();
+            $pesan_tipe = 'danger';
         }
     } else {
-        $pesan = 'Teks pengumuman dan nomor urutan tidak boleh kosong.';
+        $pesan = 'Teks pengumuman tidak boleh kosong.';
         $pesan_tipe = 'warning';
     }
 }
@@ -64,32 +81,77 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && isset($_POST['aksi']) && $_
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && isset($_POST['aksi']) && $_POST['aksi'] === 'edit') {
     $id_pengumuman = (int)($_POST['id_pengumuman'] ?? 0);
     $isi_teks = trim($_POST['isi_teks'] ?? '');
-    $urutan = (int)($_POST['urutan'] ?? 1);
+    $new_urutan = (int)($_POST['urutan'] ?? 1);
     $status_aktif = isset($_POST['status_aktif']) ? 1 : 0;
 
-    if ($id_pengumuman > 0 && !empty($isi_teks) && $urutan > 0) {
-        // Cek validasi: nomor urutan tidak boleh sama dengan pengumuman LAIN
-        $cek_stmt = $conn->prepare("SELECT id_pengumuman FROM pengumuman_display WHERE urutan = ? AND id_pengumuman != ? LIMIT 1");
-        $cek_stmt->bind_param("ii", $urutan, $id_pengumuman);
-        $cek_stmt->execute();
-        $cek_result = $cek_stmt->get_result();
+    if ($new_urutan < 1) {
+        $new_urutan = 1;
+    }
 
-        if ($cek_result && $cek_result->num_rows > 0) {
-            $pesan = "Gagal memperbarui! Nomor urutan #{$urutan} sudah digunakan oleh pengumuman lain. Nomor urutan tidak boleh ada yang sama.";
-            $pesan_tipe = 'danger';
-            $cek_stmt->close();
-        } else {
-            $cek_stmt->close();
-            $stmt = $conn->prepare("UPDATE pengumuman_display SET isi_teks = ?, status_aktif = ?, urutan = ? WHERE id_pengumuman = ?");
-            $stmt->bind_param("siii", $isi_teks, $status_aktif, $urutan, $id_pengumuman);
-            if ($stmt->execute()) {
-                $stmt->close();
-                redirect_ke("dashboard.php?page=pengumuman&pesan=edited");
-            } else {
-                $pesan = 'Gagal memperbarui pengumuman: ' . $conn->error;
-                $pesan_tipe = 'danger';
-                $stmt->close();
+    if ($id_pengumuman > 0 && !empty($isi_teks)) {
+        // Ambil data urutan lama dari pengumuman yang sedang diedit
+        $q_old = $conn->prepare("SELECT urutan FROM pengumuman_display WHERE id_pengumuman = ? LIMIT 1");
+        $q_old->bind_param("i", $id_pengumuman);
+        $q_old->execute();
+        $res_old = $q_old->get_result()->fetch_assoc();
+        $q_old->close();
+
+        if ($res_old) {
+            $old_urutan = (int)$res_old['urutan'];
+
+            // Batasi urutan maksimal agar sesuai total jumlah pengumuman
+            $q_count = mysqli_query($conn, "SELECT COUNT(*) AS total FROM pengumuman_display");
+            $r_count = mysqli_fetch_assoc($q_count);
+            $total_pengumuman = (int)($r_count['total'] ?? 1);
+
+            if ($new_urutan > $total_pengumuman) {
+                $new_urutan = $total_pengumuman;
             }
+
+            $conn->begin_transaction();
+            try {
+                if ($new_urutan !== $old_urutan) {
+                    // 1. Kosongkan slot dengan mengubah urutan item yang diedit ke 0 sementara waktu
+                    $temp_stmt = $conn->prepare("UPDATE pengumuman_display SET urutan = 0 WHERE id_pengumuman = ?");
+                    $temp_stmt->bind_param("i", $id_pengumuman);
+                    $temp_stmt->execute();
+                    $temp_stmt->close();
+
+                    if ($new_urutan < $old_urutan) {
+                        // Dipindahkan ke nomor lebih awal (misal: urutan 5 mau pindah ke 2)
+                        // Pengumuman antara 2 s.d. 4 (urutan >= new_urutan AND urutan < old_urutan)
+                        // otomatis mundur (+1) ke belakang: 2 jadi 3, 3 jadi 4, 4 jadi 5. Nomor 1 tetap 1.
+                        $shift_stmt = $conn->prepare("UPDATE pengumuman_display SET urutan = urutan + 1 WHERE urutan >= ? AND urutan < ? ORDER BY urutan DESC");
+                        $shift_stmt->bind_param("ii", $new_urutan, $old_urutan);
+                        $shift_stmt->execute();
+                        $shift_stmt->close();
+                    } else {
+                        // Dipindahkan ke nomor lebih akhir (misal: urutan 2 mau pindah ke 5)
+                        // Pengumuman antara 3 s.d. 5 (urutan > old_urutan AND urutan <= new_urutan)
+                        // otomatis maju (-1): 3 jadi 2, 4 jadi 3, 5 jadi 4.
+                        $shift_stmt = $conn->prepare("UPDATE pengumuman_display SET urutan = urutan - 1 WHERE urutan > ? AND urutan <= ? ORDER BY urutan ASC");
+                        $shift_stmt->bind_param("ii", $old_urutan, $new_urutan);
+                        $shift_stmt->execute();
+                        $shift_stmt->close();
+                    }
+                }
+
+                // 2. Simpan perubahan pengumuman ke urutan baru
+                $stmt = $conn->prepare("UPDATE pengumuman_display SET isi_teks = ?, status_aktif = ?, urutan = ? WHERE id_pengumuman = ?");
+                $stmt->bind_param("siii", $isi_teks, $status_aktif, $new_urutan, $id_pengumuman);
+                $stmt->execute();
+                $stmt->close();
+
+                $conn->commit();
+                redirect_ke("dashboard.php?page=pengumuman&pesan=edited");
+            } catch (Exception $e) {
+                $conn->rollback();
+                $pesan = 'Gagal memperbarui pengumuman: ' . $e->getMessage();
+                $pesan_tipe = 'danger';
+            }
+        } else {
+            $pesan = 'Data pengumuman tidak ditemukan di database.';
+            $pesan_tipe = 'danger';
         }
     } else {
         $pesan = 'Data edit tidak valid atau teks pengumuman kosong.';
@@ -116,11 +178,35 @@ if (isset($_GET['aksi']) && $_GET['aksi'] === 'toggle') {
 if (isset($_GET['aksi']) && $_GET['aksi'] === 'hapus') {
     $id = (int)($_GET['id'] ?? 0);
     if ($id > 0) {
-        $stmt = $conn->prepare("DELETE FROM pengumuman_display WHERE id_pengumuman = ?");
-        $stmt->bind_param("i", $id);
-        $stmt->execute();
-        $stmt->close();
-        redirect_ke("dashboard.php?page=pengumuman&pesan=deleted");
+        $conn->begin_transaction();
+        try {
+            $q_del = $conn->prepare("SELECT urutan FROM pengumuman_display WHERE id_pengumuman = ? LIMIT 1");
+            $q_del->bind_param("i", $id);
+            $q_del->execute();
+            $del_res = $q_del->get_result()->fetch_assoc();
+            $q_del->close();
+
+            if ($del_res) {
+                $del_urutan = (int)$del_res['urutan'];
+                $stmt = $conn->prepare("DELETE FROM pengumuman_display WHERE id_pengumuman = ?");
+                $stmt->bind_param("i", $id);
+                $stmt->execute();
+                $stmt->close();
+
+                // Rapikan nomor urutan setelahnya (geser maju -1) agar urutan selalu konsisten tanpa gap
+                $shift_stmt = $conn->prepare("UPDATE pengumuman_display SET urutan = urutan - 1 WHERE urutan > ? ORDER BY urutan ASC");
+                $shift_stmt->bind_param("i", $del_urutan);
+                $shift_stmt->execute();
+                $shift_stmt->close();
+            }
+
+            $conn->commit();
+            redirect_ke("dashboard.php?page=pengumuman&pesan=deleted");
+        } catch (Exception $e) {
+            $conn->rollback();
+            $pesan = 'Gagal menghapus pengumuman: ' . $e->getMessage();
+            $pesan_tipe = 'danger';
+        }
     }
 }
 
@@ -130,13 +216,13 @@ if (isset($_GET['pesan'])) {
         $pesan = 'Status aktif pengumuman berhasil diubah!';
         $pesan_tipe = 'info';
     } elseif ($_GET['pesan'] === 'deleted') {
-        $pesan = 'Pengumuman berhasil dihapus!';
+        $pesan = 'Pengumuman berhasil dihapus dan nomor urutan otomatis dirapikan!';
         $pesan_tipe = 'success';
     } elseif ($_GET['pesan'] === 'edited') {
-        $pesan = 'Pengumuman berhasil diperbarui!';
+        $pesan = 'Pengumuman berhasil diperbarui dan urutan otomatis disesuaikan!';
         $pesan_tipe = 'success';
     } elseif ($_GET['pesan'] === 'added') {
-        $pesan = 'Pengumuman baru berhasil ditambahkan!';
+        $pesan = 'Pengumuman baru berhasil ditambahkan dan urutan otomatis disesuaikan!';
         $pesan_tipe = 'success';
     }
 }
@@ -212,12 +298,35 @@ $preview_text = !empty($preview_list) ? implode(" &nbsp;&bull;&nbsp; ", $preview
                             <label class="font-weight-bold">Teks Pengumuman <span class="text-danger">*</span></label>
                             <textarea 
                                 name="isi_teks" 
+                                id="tambah_isi_teks"
                                 class="form-control" 
                                 rows="4" 
                                 placeholder="Contoh: Jam pelayanan PST hari ini dibuka pukul 08.00 s.d 15.30 WIB..." 
                                 required 
                                 style="border-radius: 8px;"></textarea>
                             <small class="text-muted">Teks ini akan berjalan di bagian bawah layar Display TV antrean.</small>
+                        </div>
+                        <div class="form-group">
+                            <label class="font-weight-bold text-dark">Urutan Tampil <span class="text-danger">*</span></label>
+                            <input 
+                                type="number" 
+                                name="urutan" 
+                                id="tambah_urutan" 
+                                class="form-control" 
+                                min="1" 
+                                max="999" 
+                                value="<?= $next_urutan; ?>" 
+                                required 
+                                style="border-radius: 8px;">
+                            <div id="infoShiftTambah" class="mt-2" style="display: none;">
+                                <div class="alert alert-info py-2 px-3 mb-0 shadow-xs" style="font-size: 12px; border-radius: 8px; background-color: #e0f2fe; border-color: #bae6fd; color: #0369a1;">
+                                    <i class="fas fa-info-circle mr-1 text-primary"></i> 
+                                    <span id="infoShiftTambahText">Nomor urutan ini sudah terpakai. Pengumuman pada nomor ini dan seterusnya akan <strong>otomatis digeser mundur</strong> (+1).</span>
+                                </div>
+                            </div>
+                            <small class="text-muted d-block mt-1">
+                                Angka lebih kecil tayang lebih awal. Jika nomor sudah ada, urutan lama akan <strong>otomatis digeser mundur</strong>.
+                            </small>
                         </div>
                         <div class="form-group mb-0">
                             <div class="custom-control custom-switch">
@@ -344,6 +453,7 @@ $preview_text = !empty($preview_list) ? implode(" &nbsp;&bull;&nbsp; ", $preview
             <form id="formEditPengumuman" action="dashboard.php?page=pengumuman" method="POST">
                 <input type="hidden" name="aksi" value="edit">
                 <input type="hidden" name="id_pengumuman" id="edit_id_pengumuman" value="">
+                <input type="hidden" id="edit_old_urutan" value="">
                 <div class="modal-body p-4">
                     <div class="form-group">
                         <label class="font-weight-bold text-dark">Teks Pengumuman <span class="text-danger">*</span></label>
@@ -368,11 +478,14 @@ $preview_text = !empty($preview_list) ? implode(" &nbsp;&bull;&nbsp; ", $preview
                             max="999" 
                             required 
                             style="border-radius: 8px;">
-                        <div id="pesanDuplikatEdit" class="text-danger font-weight-bold mt-1" style="display: none; font-size: 12px;">
-                            <i class="fas fa-exclamation-triangle mr-1"></i> Nomor urutan ini sudah terpakai oleh pengumuman lain!
+                        <div id="infoShiftEdit" class="mt-2" style="display: none;">
+                            <div class="alert alert-info py-2 px-3 mb-0 shadow-xs" style="font-size: 12px; border-radius: 8px; background-color: #e0f2fe; border-color: #bae6fd; color: #0369a1;">
+                                <i class="fas fa-exchange-alt mr-1 text-primary"></i> 
+                                <span id="infoShiftEditText">Nomor urutan ini sudah terpakai oleh pengumuman lain. Jika disimpan, pengumuman lain akan <strong>otomatis digeser</strong> untuk memberi ruang.</span>
+                            </div>
                         </div>
                         <small class="text-muted d-block mt-1">
-                            <strong>Nomor urutan tidak boleh sama</strong> dengan pengumuman lain (angka lebih kecil tayang lebih awal).
+                            Nomor urutan menentukan giliran tayang (angka lebih kecil tayang lebih awal). Jika memilih nomor yang sudah terpakai, nomor pengumuman lain akan <strong>otomatis digeser</strong>.
                         </small>
                     </div>
                     <div class="form-group mb-0">
@@ -399,7 +512,7 @@ $preview_text = !empty($preview_list) ? implode(" &nbsp;&bull;&nbsp; ", $preview
 
 <script>
 // Data nomor urutan yang sudah dipakai di database
-const DATA_URUTAN = <?= json_encode($urutan_terpakai_map); ?>;
+var DATA_URUTAN = <?= json_encode($urutan_terpakai_map); ?>;
 
 (function () {
     function initPengumumanEvents() {
@@ -409,93 +522,69 @@ const DATA_URUTAN = <?= json_encode($urutan_terpakai_map); ?>;
         }
 
         // ==========================================================
-        // 1. VALIDASI REAL-TIME UNIK PADA FORM TAMBAH
+        // 1. INFO REAL-TIME PADA FORM TAMBAH
         // ==========================================================
         function cekUrutanTambah() {
             var val = parseInt($('#tambah_urutan').val(), 10);
-            var isDuplicate = false;
+            var isTaken = false;
 
             for (var key in DATA_URUTAN) {
                 if (DATA_URUTAN[key] === val) {
-                    isDuplicate = true;
+                    isTaken = true;
                     break;
                 }
             }
 
-            if (isDuplicate) {
-                $('#tambah_urutan').addClass('is-invalid');
-                $('#pesanDuplikatTambah').show();
-                return false;
+            if (isTaken) {
+                $('#infoShiftTambahText').html('Nomor urutan <strong>#' + val + '</strong> sudah terpakai. Jika disimpan, pengumuman pada nomor #' + val + ' dan seterusnya akan <strong>otomatis digeser mundur (+1)</strong>.');
+                $('#infoShiftTambah').slideDown(150);
             } else {
-                $('#tambah_urutan').removeClass('is-invalid');
-                $('#pesanDuplikatTambah').hide();
-                return true;
+                $('#infoShiftTambah').slideUp(150);
             }
         }
 
         $('#tambah_urutan').on('input change', cekUrutanTambah);
 
-        $('#formTambahPengumuman').on('submit', function (e) {
-            if (!cekUrutanTambah()) {
-                e.preventDefault();
-                var val = $('#tambah_urutan').val();
-                if (typeof Swal !== 'undefined') {
-                    Swal.fire({
-                        title: "Nomor Urutan Duplikat!",
-                        text: "Nomor urutan #" + val + " sudah digunakan oleh pengumuman lain. Setiap pengumuman wajib memiliki nomor urutan yang berbeda.",
-                        icon: "warning",
-                        confirmButtonColor: "#0d6efd"
-                    });
-                } else {
-                    alert("Nomor urutan #" + val + " sudah digunakan!");
-                }
-            }
-        });
-
         // ==========================================================
-        // 2. VALIDASI REAL-TIME UNIK PADA FORM EDIT
+        // 2. INFO REAL-TIME PADA FORM EDIT
         // ==========================================================
         function cekUrutanEdit() {
             var currentId = parseInt($('#edit_id_pengumuman').val(), 10);
+            var oldUrutan = parseInt($('#edit_old_urutan').val(), 10);
             var val = parseInt($('#edit_urutan').val(), 10);
-            var isDuplicate = false;
 
+            if (isNaN(val) || val < 1) {
+                $('#infoShiftEdit').slideUp(150);
+                return;
+            }
+
+            // Jika nilai sama dengan urutan aslinya, tidak ada pergeseran
+            if (val === oldUrutan) {
+                $('#infoShiftEdit').slideUp(150);
+                return;
+            }
+
+            var isCollision = false;
             for (var key in DATA_URUTAN) {
                 if (parseInt(key, 10) !== currentId && DATA_URUTAN[key] === val) {
-                    isDuplicate = true;
+                    isCollision = true;
                     break;
                 }
             }
 
-            if (isDuplicate) {
-                $('#edit_urutan').addClass('is-invalid');
-                $('#pesanDuplikatEdit').show();
-                return false;
+            if (isCollision) {
+                if (val < oldUrutan) {
+                    $('#infoShiftEditText').html('Nomor urutan <strong>#' + val + '</strong> sudah terpakai. Pengumuman pada nomor #' + val + ' s.d. #' + (oldUrutan - 1) + ' akan <strong>otomatis mundur (+1)</strong> ke belakang, sedangkan nomor sebelum #' + val + ' tetap.');
+                } else {
+                    $('#infoShiftEditText').html('Nomor urutan <strong>#' + val + '</strong> sudah terpakai. Pengumuman di antara posisi tersebut akan <strong>otomatis maju (-1)</strong> mengisi posisi yang ditinggalkan.');
+                }
+                $('#infoShiftEdit').slideDown(150);
             } else {
-                $('#edit_urutan').removeClass('is-invalid');
-                $('#pesanDuplikatEdit').hide();
-                return true;
+                $('#infoShiftEdit').slideUp(150);
             }
         }
 
         $('#edit_urutan').on('input change', cekUrutanEdit);
-
-        $('#formEditPengumuman').on('submit', function (e) {
-            if (!cekUrutanEdit()) {
-                e.preventDefault();
-                var val = $('#edit_urutan').val();
-                if (typeof Swal !== 'undefined') {
-                    Swal.fire({
-                        title: "Nomor Urutan Duplikat!",
-                        text: "Nomor urutan #" + val + " sudah digunakan oleh pengumuman lain. Nomor urutan tidak boleh sama!",
-                        icon: "warning",
-                        confirmButtonColor: "#0d6efd"
-                    });
-                } else {
-                    alert("Nomor urutan #" + val + " sudah digunakan!");
-                }
-            }
-        });
 
         // ==========================================================
         // 3. EVENT BUKA MODAL EDIT
@@ -508,9 +597,10 @@ const DATA_URUTAN = <?= json_encode($urutan_terpakai_map); ?>;
             var status = btn.attr('data-status');
 
             $('#edit_id_pengumuman').val(id);
+            $('#edit_old_urutan').val(urutan);
             $('#edit_isi_teks').val(teks);
             $('#edit_urutan').val(urutan).removeClass('is-invalid');
-            $('#pesanDuplikatEdit').hide();
+            $('#infoShiftEdit').hide();
             $('#edit_status_aktif').prop('checked', parseInt(status, 10) === 1);
 
             $('#modalEditPengumuman').modal('show');
@@ -525,7 +615,7 @@ const DATA_URUTAN = <?= json_encode($urutan_terpakai_map); ?>;
             if (typeof Swal !== 'undefined') {
                 Swal.fire({
                     title: "Hapus Pengumuman?",
-                    text: "Apakah Anda yakin ingin menghapus pengumuman ini secara permanen dari Display TV?",
+                    text: "Apakah Anda yakin ingin menghapus pengumuman ini secara permanen dari Display TV? Nomor urutan pengumuman setelahnya akan otomatis dirapikan.",
                     icon: "warning",
                     showCancelButton: true,
                     confirmButtonColor: "#dc3545",

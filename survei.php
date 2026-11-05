@@ -42,6 +42,12 @@ if (!$data) {
     die("Data pelayanan antrian tidak ditemukan.");
 }
 
+// Khusus layanan PST, dialihkan langsung ke formulir Survei Kebutuhan Data (SKD) BPS
+if (stripos($data['nama_pelayanan'] ?? '', 'PST') !== false) {
+    header("Location: https://skd.bps.go.id/skd/p/1901");
+    exit;
+}
+
 $id_antrian = (int)$data['id_antrian'];
 $id_pengunjung = (int)$data['id_pengunjung'];
 

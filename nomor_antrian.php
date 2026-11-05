@@ -41,6 +41,8 @@ if (!$data) {
 
 $id_antrian = (int)$data['id_antrian'];
 $id_pelayanan = (int)$data['id_pelayanan'];
+$nama_pelayanan = $data['nama_pelayanan'] ?? '';
+$is_pst = (stripos($nama_pelayanan, 'PST') !== false);
 
 // Cek apakah sudah pernah isi survei
 $stmt_survei = $conn->prepare("SELECT id_survei FROM survei_kepuasan WHERE id_antrian = ? LIMIT 1");
@@ -470,25 +472,9 @@ body {
     .sound-toggle,
     .tracker-box,
     .qr-toggle-wrap,
-    .qr-copy-btn {
-        display: none !important;
-    }
-    /* QR Code WAJIB tampil saat dicetak ke kertas */
+    .qr-copy-btn,
     .qr-container {
-        display: flex !important;
-        margin: 20px 0 10px;
-        page-break-inside: avoid;
-    }
-    .qr-code-img {
-        width: 130px;
-        height: 130px;
-        border: 1px solid #333;
-        box-shadow: none;
-    }
-    .qr-text {
-        color: #000 !important;
-        font-size: 11.5px;
-        font-weight: 600;
+        display: none !important;
     }
     .card-ticket {
         box-shadow: none;
@@ -585,13 +571,6 @@ body {
                 </div>
             </div>
 
-            <!-- Tombol Opsional Toggle QR Karcis di Layar -->
-            <div class="text-center qr-toggle-wrap mb-2">
-                <button type="button" class="btn btn-sm btn-link text-decoration-none text-muted py-0" style="font-size: 11.5px;" onclick="toggleQrCode()">
-                    <i class="fas fa-qrcode mr-1 text-primary"></i> <span id="toggleQrText">Tampilkan QR Code Karcis</span>
-                </button>
-            </div>
-
             <!-- QR Code Akses Cepat & Verifikasi Antrean (Otomatis saat Print / Karcis Fisik) -->
             <div class="qr-container" id="qrContainerBox">
                 <a href="<?= htmlspecialchars($live_ticket_url); ?>" target="_blank" title="Klik untuk membuka tautan tiket online" style="text-decoration:none; color:inherit; display:inline-block;">
@@ -621,24 +600,27 @@ body {
         <div class="footer-actions">
 
             <!-- Tombol Survei Kepuasan (Muncul selalu / diutamakan saat Selesai) -->
+            <?php if ($is_pst): ?>
+            <a href="https://skd.bps.go.id/skd/p/1901" target="_blank" rel="noopener noreferrer" class="btn-skm-survey" id="btnSkmSurvey" title="Survei Kebutuhan Data (SKD) BPS Kabupaten Bangka">
+                <i class="fas fa-star"></i>
+                Beri Penilaian &amp; Survei Kepuasan
+                <i class="fas fa-external-link-alt ml-1" style="font-size: 11px; opacity: 0.85;"></i>
+            </a>
+            <?php else: ?>
             <a href="survei.php?id_antrian=<?= $id_antrian; ?>" class="btn-skm-survey" id="btnSkmSurvey">
                 <i class="fas fa-star"></i>
                 <?= $sudah_survei ? 'Lihat / Perbarui Survei Kepuasan' : 'Beri Penilaian &amp; Survei Kepuasan'; ?>
             </a>
+            <?php endif; ?>
 
-            <div class="btn-action-group">
-                <button type="button" class="btn-custom btn-download-img" onclick="downloadTiketCanvas()">
-                    <i class="fas fa-file-image"></i> Simpan Gambar
-                </button>
-                <button type="button" class="btn-custom btn-print" onclick="window.print()">
-                    <i class="fas fa-print"></i> Cetak Tiket
-                </button>
-            </div>
+            <button type="button" class="btn-custom btn-print w-100" onclick="window.print()">
+                <i class="fas fa-print"></i> Cetak Tiket
+            </button>
 
 
 
-            <a href="registrasi.php" class="btn-custom btn-home">
-                <i class="fas fa-user-plus"></i> Registrasi Tamu Baru
+            <a href="index.php" class="btn-custom btn-home" title="Kembali ke Pilihan Layanan">
+                <i class="fas fa-th-large"></i> Kembali ke Menu Layanan
             </a>
 
         </div>

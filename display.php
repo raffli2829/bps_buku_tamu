@@ -450,8 +450,20 @@ function filePelayanan(nama){
         case "Pengaduan":
             return "pengaduan.mp3";
 
+        case "PST Perpustakaan":
+            return "pst_perpustakaan.mp3";
+
+        case "PST Rekomendasi":
+            return "pst_rekomendasi.mp3";
+
+        case "PST Konsultasi Statistik":
+            return "pst_konsultasi_statistik.mp3";
+
         default:
             let lower = (nama || "").toLowerCase();
+            if (lower.includes("perpustakaan")) return "pst_perpustakaan.mp3";
+            if (lower.includes("rekomendasi")) return "pst_rekomendasi.mp3";
+            if (lower.includes("konsultasi")) return "pst_konsultasi_statistik.mp3";
             if (lower.includes("ppid")) return "ppid.mp3";
             if (lower.includes("pst") || lower.includes("statistik")) return "pst.mp3";
             if (lower.includes("aduan") || lower.includes("pengaduan")) return "pengaduan.mp3";

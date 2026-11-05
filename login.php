@@ -311,6 +311,12 @@ body {
 
 <div class="login-container">
 
+    <div class="mb-3 text-left">
+        <a href="index.php" class="btn btn-sm btn-light text-primary font-weight-bold shadow-sm" style="border-radius: 8px; text-decoration: none; padding: 6px 14px;">
+            <i class="fas fa-arrow-left mr-1"></i> Kembali ke Menu Layanan
+        </a>
+    </div>
+
     <div class="card card-login">
 
         <div class="card-header-custom">
@@ -377,13 +383,6 @@ body {
                     <i class="fas fa-sign-in-alt"></i> Login
                 </button>
 
-                <div class="divider-text">
-                    <span>ATAU</span>
-                </div>
-
-                <a href="registrasi.php" class="btn btn-success btn-regis-guest w-100">
-                    <i class="fas fa-user-plus"></i> Registrasi Tamu
-                </a>
 
             </form>
 
