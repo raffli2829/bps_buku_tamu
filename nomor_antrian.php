@@ -169,9 +169,19 @@ body {
     position: relative;
 }
 
+.img-circle {
+    border-radius: 50% !important;
+}
+
+.elevation-3 {
+    box-shadow: 0 10px 20px rgba(0,0,0,.19), 0 6px 6px rgba(0,0,0,.23) !important;
+}
+
 .logo-bps {
     width: 65px;
-    height: auto;
+    height: 65px;
+    border-radius: 50%;
+    object-fit: cover;
     margin-bottom: 8px;
     filter: drop-shadow(0 3px 6px rgba(0,0,0,0.2));
 }
@@ -497,7 +507,7 @@ body {
 
         <!-- Header Tiket -->
         <div class="card-header-ticket">
-            <img src="assets/img/logo_bps.png" alt="Logo BPS" class="logo-bps">
+            <img src="assets/img/logo_bps.png" alt="Logo BPS" class="logo-bps brand-image img-circle elevation-3 mb-2">
             <h2>SIRITA</h2>
             <h5>Sistem Informasi Registrasi Tamu dan Antrian</h5>
             <h6>BPS Kabupaten Bangka</h6>
@@ -547,11 +557,6 @@ body {
                         <div class="tracker-title">Antrean di Depan Anda</div>
                         <div class="tracker-val text-warning" id="valSisaAntrean">-</div>
                     </div>
-                </div>
-                <div class="mt-2 text-center">
-                    <span class="text-muted" style="font-size: 11px;">
-                        <i class="fas fa-sync-alt fa-spin me-1"></i> Status live diperbarui otomatis
-                    </span>
                 </div>
             </div>
 

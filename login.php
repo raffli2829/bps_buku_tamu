@@ -113,9 +113,19 @@ body {
     border-bottom: none;
 }
 
+.img-circle {
+    border-radius: 50% !important;
+}
+
+.elevation-3 {
+    box-shadow: 0 10px 20px rgba(0,0,0,.19), 0 6px 6px rgba(0,0,0,.23) !important;
+}
+
 .card-header-custom .logo-img {
     width: 65px;
-    height: auto;
+    height: 65px;
+    border-radius: 50%;
+    object-fit: cover;
     margin-bottom: 10px;
     filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.15));
 }
@@ -294,8 +304,9 @@ body {
         font-size: 19px;
     }
 
-    .card-header-custom .logo-img {
+.card-header-custom .logo-img {
         width: 58px;
+        height: 58px;
         margin-bottom: 8px;
     }
 }
@@ -320,7 +331,7 @@ body {
     <div class="card card-login">
 
         <div class="card-header-custom">
-            <img src="assets/img/logo_bps.png" alt="Logo BPS" class="logo-img">
+            <img src="assets/img/logo_bps.png" alt="Logo BPS" class="logo-img brand-image img-circle elevation-3 mb-2">
             <h2>LOGIN ADMIN</h2>
             <p>SIRITA - BPS Kabupaten Bangka</p>
         </div>
@@ -418,4 +429,4 @@ function lihatPassword(){
 <script src="assets/bootstrap/js/bootstrap.bundle.min.js"></script>
 
 </body>
-</html>
+</html>

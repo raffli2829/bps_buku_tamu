@@ -134,9 +134,19 @@ function get_pelayanan_meta($nama) {
             text-decoration: none;
         }
 
+        .img-circle {
+            border-radius: 50% !important;
+        }
+
+        .elevation-3 {
+            box-shadow: 0 10px 20px rgba(0,0,0,.19), 0 6px 6px rgba(0,0,0,.23) !important;
+        }
+
         .logo-nav {
             width: 50px;
-            height: auto;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
             filter: drop-shadow(0 2px 6px rgba(0,0,0,0.25));
         }
 
@@ -510,6 +520,7 @@ function get_pelayanan_meta($nama) {
 
             .logo-nav {
                 width: 40px;
+                height: 40px;
             }
 
             .nav-title {
@@ -608,7 +619,7 @@ function get_pelayanan_meta($nama) {
         <div class="container-fluid d-flex align-items-center justify-content-between p-0">
             <!-- Brand Logo -->
             <a href="index.php" class="navbar-brand-wrap">
-                <img src="assets/img/logo_bps.png" alt="Logo BPS Bangka" class="logo-nav">
+                <img src="assets/img/logo_bps.png" alt="Logo BPS Bangka" class="logo-nav brand-image img-circle elevation-3">
                 <div>
                     <h1 class="nav-title">SIRITA</h1>
                     <p class="nav-subtitle">BPS Kabupaten Bangka</p>

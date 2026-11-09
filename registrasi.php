@@ -110,7 +110,9 @@ body::before {
 
 .logo-main {
     width: 95px;
-    height: auto;
+    height: 95px;
+    border-radius: 50%;
+    object-fit: cover;
     filter: drop-shadow(0 4px 10px rgba(0,0,0,0.18));
 }
 
@@ -415,6 +417,7 @@ textarea.input-box-field {
 
     .logo-main {
         width: 70px;
+        height: 70px;
         margin-bottom: 10px;
     }
 
@@ -522,7 +525,7 @@ textarea.input-box-field {
         <div class="col-lg-5 left-panel">
 
             <div class="text-center">
-                <img src="assets/img/logo_bps.png" alt="Logo BPS" class="logo-main mb-3">
+                <img src="assets/img/logo_bps.png" alt="Logo BPS" class="logo-main brand-image img-circle elevation-3 mb-3">
                 <h1 class="brand-title">SIRITA</h1>
                 <h4 class="brand-subtitle">
                     Sistem Informasi Registrasi Tamu dan Antrian

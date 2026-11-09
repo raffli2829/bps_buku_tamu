@@ -74,6 +74,9 @@ body{
 
 .logo{
     width:70px;
+    height:70px;
+    border-radius:50%;
+    object-fit:cover;
     margin-bottom:5px;
 }
 
@@ -243,7 +246,7 @@ body{
 
 <div class="header">
 
-<img src="assets/img/logo_bps.png" class="logo">
+<img src="assets/img/logo_bps.png" alt="Logo BPS" class="logo brand-image img-circle elevation-3">
 
 <h2>BPS KABUPATEN BANGKA</h2>
 

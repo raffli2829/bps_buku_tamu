@@ -128,9 +128,19 @@ body {
     text-align: center;
 }
 
+.img-circle {
+    border-radius: 50% !important;
+}
+
+.elevation-3 {
+    box-shadow: 0 10px 20px rgba(0,0,0,.19), 0 6px 6px rgba(0,0,0,.23) !important;
+}
+
 .card-header-survei .logo-img {
     width: 65px;
-    height: auto;
+    height: 65px;
+    border-radius: 50%;
+    object-fit: cover;
     margin-bottom: 10px;
     filter: drop-shadow(0 2px 6px rgba(0,0,0,0.2));
 }
@@ -365,7 +375,7 @@ body {
     <div class="card card-survei">
 
         <div class="card-header-survei">
-            <img src="assets/img/logo_bps.png" alt="Logo BPS" class="logo-img">
+            <img src="assets/img/logo_bps.png" alt="Logo BPS" class="logo-img brand-image img-circle elevation-3 mb-2">
             <h2>SURVEI KEPUASAN MASYARAKAT</h2>
             <p>BPS Kabupaten Bangka</p>
             <div class="ticket-pill">
@@ -447,7 +457,7 @@ body {
                 <!-- Indikator 1: Keramahan Petugas -->
                 <div class="question-group">
                     <div class="question-label">
-                        <i class="fas fa-user-friends text-primary"></i>
+                        
                         <span>1. Keramahan &amp; Kesopanan Petugas</span>
                     </div>
                     <div class="radio-pill-group">
@@ -477,7 +487,7 @@ body {
                 <!-- Indikator 2: Kecepatan Layanan -->
                 <div class="question-group">
                     <div class="question-label">
-                        <i class="fas fa-stopwatch text-success"></i>
+                        
                         <span>2. Kecepatan &amp; Ketepatan Waktu Pelayanan</span>
                     </div>
                     <div class="radio-pill-group">
@@ -507,7 +517,7 @@ body {
                 <!-- Indikator 3: Kemudahan Prosedur -->
                 <div class="question-group">
                     <div class="question-label">
-                        <i class="fas fa-tasks text-info"></i>
+                        
                         <span>3. Kemudahan Prosedur &amp; Persyaratan</span>
                     </div>
                     <div class="radio-pill-group">
@@ -568,11 +578,11 @@ body {
 function updateRatingText(val) {
     const el = document.getElementById('ratingText');
     const labels = {
-        1: '😞 1 Bintang: Sangat Tidak Puas',
-        2: '🙁 2 Bintang: Kurang Puas',
-        3: '😐 3 Bintang: Cukup Puas',
-        4: '😊 4 Bintang: Puas / Baik',
-        5: '🤩 5 Bintang: Sangat Puas / Sangat Baik'
+        1: '1 Bintang: Sangat Tidak Puas',
+        2: '2 Bintang: Kurang Puas',
+        3: '3 Bintang: Cukup Puas',
+        4: '4 Bintang: Puas',
+        5: '5 Bintang: Sangat Puas'
     };
     el.innerHTML = labels[val] || '';
     el.style.color = val >= 4 ? '#198754' : (val === 3 ? '#fd7e14' : '#dc3545');
