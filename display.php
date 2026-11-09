@@ -8,15 +8,17 @@ SELECT
 FROM antrian a
 JOIN pelayanan p
 ON a.id_pelayanan = p.id_pelayanan
-WHERE a.status='Dipanggil'
+JOIN pengunjung pg ON a.id_pengunjung = pg.id_pengunjung
+WHERE a.status='Dipanggil' AND pg.tanggal = CURDATE()
 ORDER BY a.waktu_panggil DESC
 LIMIT 1
 "));
 
 $menunggu = mysqli_query($conn,"
-SELECT nomor_antrian
-FROM antrian
-WHERE status='Menunggu'
+SELECT a.nomor_antrian
+FROM antrian a
+JOIN pengunjung pg ON a.id_pengunjung = pg.id_pengunjung
+WHERE a.status='Menunggu' AND pg.tanggal = CURDATE()
 ORDER BY id_antrian ASC
 LIMIT 3
 ");

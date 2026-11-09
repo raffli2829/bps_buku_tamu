@@ -11,7 +11,7 @@
     <ul class="navbar-nav ml-auto">
         <li class="nav-item">
             <span class="nav-link">
-                Selamat Datang, <?= $_SESSION['nama']; ?>
+                Selamat Datang, <?= htmlspecialchars($_SESSION['nama'] ?? 'Admin'); ?>
             </span>
         </li>
     </ul>

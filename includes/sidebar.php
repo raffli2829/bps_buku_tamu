@@ -19,13 +19,38 @@
     <div class="sidebar">
 
         <!-- User Panel -->
+        <?php
+        $foto_sidebar = 'assets/img/default-avatar.jpg';
+        if (!empty($_SESSION['foto']) && file_exists('assets/img/uploads/' . $_SESSION['foto'])) {
+            $foto_sidebar = 'assets/img/uploads/' . $_SESSION['foto'];
+        } elseif (isset($_SESSION['id_user'])) {
+            if (!isset($conn)) {
+                include_once __DIR__ . '/../config/koneksi.php';
+            }
+            if (isset($conn) && $conn instanceof mysqli) {
+                $stmt_side = $conn->prepare("SELECT foto FROM users WHERE id_user = ? LIMIT 1");
+                if ($stmt_side) {
+                    $stmt_side->bind_param("i", $_SESSION['id_user']);
+                    $stmt_side->execute();
+                    $res_side = $stmt_side->get_result();
+                    if ($res_side && $row_side = $res_side->fetch_assoc()) {
+                        if (!empty($row_side['foto']) && file_exists('assets/img/uploads/' . $row_side['foto'])) {
+                            $foto_sidebar = 'assets/img/uploads/' . $row_side['foto'];
+                            $_SESSION['foto'] = $row_side['foto'];
+                        }
+                    }
+                    $stmt_side->close();
+                }
+            }
+        }
+        ?>
         <div class="user-panel mt-3 pb-3 mb-3 d-flex">
 
     <div class="image">
 
         <a href="dashboard.php?page=akun">
 
-            <img src="dist/img/user2-160x160.jpg"
+            <img src="<?= htmlspecialchars($foto_sidebar ?? 'assets/img/default-avatar.jpg'); ?>" style="width: 34px; height: 34px; object-fit: cover; background-color: #fff;"
                  class="img-circle elevation-2"
                  alt="User">
 
