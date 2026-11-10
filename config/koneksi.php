@@ -1,17 +1,24 @@
 <?php
 
+// Jika koneksi database sudah aktif pada siklus request saat ini, tidak perlu inisialisasi ulang
+if (isset($conn) && $conn instanceof mysqli && @mysqli_ping($conn)) {
+    return;
+}
+
 // Helper membaca variabel Environment (mendukung getenv, $_ENV, dan $_SERVER)
-function get_config_val($keys, $default = '') {
-    if (!is_array($keys)) {
-        $keys = [$keys];
+if (!function_exists('get_config_val')) {
+    function get_config_val($keys, $default = '') {
+        if (!is_array($keys)) {
+            $keys = [$keys];
+        }
+        foreach ($keys as $k) {
+            $val = getenv($k);
+            if ($val !== false && $val !== '') return (string)$val;
+            if (!empty($_ENV[$k])) return (string)$_ENV[$k];
+            if (!empty($_SERVER[$k])) return (string)$_SERVER[$k];
+        }
+        return $default;
     }
-    foreach ($keys as $k) {
-        $val = getenv($k);
-        if ($val !== false && $val !== '') return (string)$val;
-        if (!empty($_ENV[$k])) return (string)$_ENV[$k];
-        if (!empty($_SERVER[$k])) return (string)$_SERVER[$k];
-    }
-    return $default;
 }
 
 // Deteksi apakah sedang berjalan di lingkungan Vercel / Cloud Serverless
