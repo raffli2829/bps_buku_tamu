@@ -613,7 +613,8 @@ function updateDisplay(){
 updateDisplay();
 
 // Cek database setiap 1 detik
-setInterval(updateDisplay, 1000);
+// Cek database setiap 3 detik (dioptimasi hemat kuota Vercel & TiDB Cloud)
+setInterval(updateDisplay, 3000);
 
 </script>
 
