@@ -1,5 +1,9 @@
 <?php
-// Entrypoint Serverless Vercel (Universal Router)
+// Set session save path to /tmp for Vercel Serverless environment
+if (is_dir('/tmp') && is_writable('/tmp')) {
+    @ini_set('session.save_path', '/tmp');
+}
+
 $root = dirname(__DIR__);
 
 // Ambil path request tanpa parameter query string
@@ -23,7 +27,7 @@ $realTarget = realpath($target);
 $realRoot   = realpath($root);
 
 if ($realTarget && strpos($realTarget, $realRoot) === 0 && is_file($realTarget)) {
-    // Ubah direktori kerja ke lokasi file target agar relative path & includes (seperti ../../config) berfungsi
+    // Ubah direktori kerja ke lokasi file target agar relative path & includes berfungsi
     chdir(dirname($realTarget));
 
     // Jika file PHP, eksekusi file tersebut
@@ -35,17 +39,17 @@ if ($realTarget && strpos($realTarget, $realRoot) === 0 && is_file($realTarget))
     // Jika file statis yang lolos ke router
     $ext = pathinfo($realTarget, PATHINFO_EXTENSION);
     $mimes = [
-        'css'  => 'text/css',
-        'js'   => 'application/javascript',
-        'png'  => 'image/png',
-        'jpg'  => 'image/jpeg',
-        'jpeg' => 'image/jpeg',
-        'gif'  => 'image/gif',
-        'svg'  => 'image/svg+xml',
-        'ico'  => 'image/x-icon',
-        'woff' => 'font/woff',
-        'woff2'=> 'font/woff2',
-        'ttf'  => 'font/ttf',
+        'css'   => 'text/css',
+        'js'    => 'application/javascript',
+        'png'   => 'image/png',
+        'jpg'   => 'image/jpeg',
+        'jpeg'  => 'image/jpeg',
+        'gif'   => 'image/gif',
+        'svg'   => 'image/svg+xml',
+        'ico'   => 'image/x-icon',
+        'woff'  => 'font/woff',
+        'woff2' => 'font/woff2',
+        'ttf'   => 'font/ttf',
     ];
     $contentType = $mimes[$ext] ?? (function_exists('mime_content_type') ? mime_content_type($realTarget) : 'application/octet-stream');
     header('Content-Type: ' . $contentType);
