@@ -25,7 +25,7 @@
   "env": {
     "DB_HOST": "gateway01.ap-southeast-1.prod.aws.tidbcloud.com",
     "DB_PORT": "4000",
-    "DB_USER": "47rl44GFwCeHL4N.root",
+    "DB_USER": "47rL44GFwCeHL4N.root",
     "DB_NAME": "bps_buku_tamu",
     "DB_SSL": "true"
   }

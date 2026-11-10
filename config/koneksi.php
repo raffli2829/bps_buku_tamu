@@ -20,7 +20,7 @@ $is_vercel = !empty(get_config_val('VERCEL')) || !empty(get_config_val('AWS_LAMB
 // Default konfigurasi: jika di Vercel, otomatis gunakan TiDB Cloud
 $default_host = $is_vercel ? 'gateway01.ap-southeast-1.prod.aws.tidbcloud.com' : 'localhost';
 $default_port = $is_vercel ? 4000 : 3306;
-$default_user = $is_vercel ? '47rl44GFwCeHL4N.root' : 'root';
+$default_user = $is_vercel ? '47rL44GFwCeHL4N.root' : 'root';
 $default_db   = 'bps_buku_tamu';
 
 // Baca variabel (fleksibel: mendukung DB_PASSWORD maupun PASSWORD, DB_HOST maupun HOST, dll.)
@@ -29,6 +29,11 @@ $user     = get_config_val(['DB_USER', 'USERNAME', 'USER'], $default_user);
 $password = get_config_val(['DB_PASSWORD', 'PASSWORD'], '');
 $database = get_config_val(['DB_NAME', 'DATABASE'], $default_db);
 $port     = (int)get_config_val(['DB_PORT', 'PORT'], $default_port);
+
+// Normalisasi huruf besar kecil pada username TiDB (47rL... huruf L besar, bukan kecil)
+if (strcasecmp($user, '47rl44GFwCeHL4N.root') === 0) {
+    $user = '47rL44GFwCeHL4N.root';
+}
 
 // Validasi jika di Vercel tapi password masih kosong atau masih bernilai teks sensor '<PASSWORD>'
 if ($is_vercel && ($password === '' || trim($password) === '<PASSWORD>')) {
@@ -45,13 +50,10 @@ if ($is_vercel && ($password === '' || trim($password) === '<PASSWORD>')) {
                     : "Variable <code>PASSWORD</code> atau <code>DB_PASSWORD</code> di Vercel masih kosong.") . "
             </p>
             <div style='background:#f1f5f9;padding:18px;border-radius:10px;margin:20px 0;'>
-                <strong>Langkah Mudah Mendapatkan Password Asli:</strong>
+                <strong>Langkah Mudah Menyimpan Password Asli:</strong>
                 <ol style='margin:10px 0 0 20px;padding:0;color:#1e293b;line-height:1.8;'>
-                    <li>Buka konsol <a href='https://tidbcloud.com' target='_blank' style='color:#0d6efd;font-weight:600;'>TiDB Cloud</a> pada popup <strong>Connect</strong>.</li>
-                    <li>Klik tautan biru <strong>Reset Password</strong> (di atas kotak Parameters).</li>
-                    <li>TiDB akan membuat password acak baru dan menampilkan tombol <strong>Copy</strong> (dua kotak tumpuk). Klik tombol tersebut untuk menyalin password asli.</li>
                     <li>Buka <strong>Vercel &rarr; Settings &rarr; Environment Variables</strong>.</li>
-                    <li>Ubah nilai variable <code>PASSWORD</code> (atau <code>DB_PASSWORD</code>) dengan menempelkan (paste) password asli tersebut.</li>
+                    <li>Ubah nilai variable <code>PASSWORD</code> menjadi password asli yang Anda salin dari tombol Reset Password.</li>
                     <li>Klik tab <strong>Deployments &rarr; klik tombol titik tiga (...) &rarr; Redeploy</strong>.</li>
                 </ol>
             </div>
@@ -100,14 +102,12 @@ if (!$connected) {
         <body style='font-family:system-ui,-apple-system,sans-serif;background:#f8fafc;padding:40px 16px;margin:0;'>
             <div style='max-width:620px;margin:0 auto;background:#ffffff;padding:32px;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,0.08);border-top:5px solid #ea580c;'>
                 <h2 style='color:#ea580c;margin-top:0;'>⚠️ Password TiDB Cloud Tidak Cocok (Access Denied)</h2>
-                <p style='color:#334155;'>Koneksi berhasil menjangkau gateway TiDB Cloud, namun server menolak autentikasi untuk user <code>" . htmlspecialchars($user) . "</code>. Password yang tersimpan di Vercel tidak cocok.</p>
+                <p style='color:#334155;'>Koneksi berhasil menjangkau gateway TiDB Cloud, namun server menolak autentikasi untuk user <code>" . htmlspecialchars($user) . "</code>. Pastikan setelah mengubah variable di Vercel Settings, Anda telah melakukan <strong>Redeploy</strong> pada tab Deployments.</p>
                 <div style='background:#f1f5f9;padding:16px;border-radius:8px;margin:20px 0;'>
                     <strong>Solusi:</strong>
                     <ol style='margin:8px 0 0 20px;padding:0;color:#1e293b;line-height:1.7;'>
-                        <li>Buka konsol <a href='https://tidbcloud.com' target='_blank' style='color:#0d6efd;'>TiDB Cloud</a> &rarr; klik tombol <strong>Connect</strong>.</li>
-                        <li>Klik <strong>Reset Password</strong> &rarr; salin password baru.</li>
-                        <li>Buka <strong>Vercel &rarr; Settings &rarr; Environment Variables</strong> &rarr; ubah <code>PASSWORD</code>.</li>
-                        <li>Klik tab <strong>Deployments &rarr; Redeploy</strong>.</li>
+                        <li>Buka <strong>Vercel Dashboard &rarr; tab Deployments</strong>.</li>
+                        <li>Klik titik tiga (<strong>...</strong>) pada baris deployment teratas &rarr; klik <strong>Redeploy</strong>.</li>
                     </ol>
                 </div>
                 <p style='font-size:12px;color:#94a3b8;margin-bottom:0;'>Detail error: " . htmlspecialchars($err) . "</p>
